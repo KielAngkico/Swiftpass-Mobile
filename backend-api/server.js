@@ -26,7 +26,8 @@ const exerciseLogsRoute = require('./routes/ExercisesLogs');
 
 
 
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+
 console.log('DB_USER from .env:', process.env.DB_USER);
 
 const app = express();

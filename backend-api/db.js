@@ -1,4 +1,5 @@
-require("dotenv").config();
+require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
+console.log("DB_USER:", process.env.DB_USER); // should print 'root'
 const mysql = require("mysql2/promise");
 
 const pool = mysql.createPool({
