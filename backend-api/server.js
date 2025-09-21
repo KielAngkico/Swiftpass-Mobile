@@ -68,6 +68,7 @@ console.log('✅ /api/activity-history route mounted');
 
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`SwiftPassMobiApp API running on port ${PORT}`);
 });
+
