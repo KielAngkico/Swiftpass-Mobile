@@ -15,7 +15,7 @@ export default function NavigationBar({ email, rfid_tag, system_type, admin_id }
   ];
 
   return (
-    <SafeAreaView edges={["bottom"]} className="bg-gray-700 border-t border-gray-300 shadow-md">
+    <SafeAreaView edges={["bottom"]} className="bg-gray-900 border-t border-gray-300 shadow-md">
       <View className="flex-row justify-around items-center px-6 py-3">
         {navItems.map(({ key, label, icon, route }) => {
           const isActive = pathname.toLowerCase().includes(route.toLowerCase());

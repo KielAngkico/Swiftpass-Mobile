@@ -10,9 +10,11 @@ import {
   Alert,
   Modal,
   FlatList,
+  SafeAreaView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import API from "../../../backend-api/services/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -23,8 +25,8 @@ const steps = [
       button: "Get Started",
     }),
   },
-  { key: "diet_type", question: "What's your diet preference?", subtitle: "This will customize your food options", options: ["Balanced", "Vegetarian", "No Red Meat"] },
-  { key: "allergies", question: "Do you have any allergies?", subtitle: "Select all that apply", options: [] },
+  { key: "allergies", question: "Do you have any allergies?", subtitle: "Select all that apply", options: [] }, // MOVED FIRST
+  { key: "diet_type", question: "What's your diet preference?", subtitle: "This will customize your food options", options: ["Balanced", "Vegetarian", "No Red Meat"] }, // MOVED SECOND
   { key: "food_preferences", question: "Which foods do you like?", subtitle: "Select options per category", macroGrouped: true, options: {} },
   { key: "calculating", type: "info", content: () => ({ title: "Calculating...", message: "Please wait while we find your best food options.", button: "Next" }) },
   { key: "best_foods", question: "Here are your recommended foods!", subtitle: "Tap any food to see other options", macroGrouped: true, options: {} },
@@ -38,6 +40,7 @@ const steps = [
 
 export default function NutritionAssessment() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState({ 
     diet_type: "", 
@@ -110,18 +113,53 @@ export default function NutritionAssessment() {
     fetchFoodGroups();
   }, []);
 
-  useEffect(() => {
-    if (!answers.diet_type || Object.keys(foodGroups).length === 0) {
-      setFilteredFoodGroups(foodGroups);
-      return;
-    }
 
-    const filtered = Object.entries(foodGroups).reduce((acc, [macro, items]) => {
+
+useEffect(() => {
+  if (Object.keys(foodGroups).length === 0) {
+    return;
+  }
+
+  // Start with all food groups
+  let filtered = { ...foodGroups };
+
+  // Step 1: Apply allergen filter FIRST
+  if (answers.allergies && answers.allergies.length > 0) {
+    const selectedAllergenNames = answers.allergies
+      .map(allergenId => {
+        const allergen = allergensList.find(a => a.id === allergenId);
+        return allergen ? allergen.name.toLowerCase() : null;
+      })
+      .filter(name => name !== null && name !== 'other (please specify)');
+
+    if (selectedAllergenNames.length > 0) {
+      filtered = Object.entries(filtered).reduce((acc, [macro, items]) => {
+        const filteredItems = items.filter(item => {
+          const foodGroupName = item.name.toLowerCase();
+          return !selectedAllergenNames.some(allergen => 
+            foodGroupName.includes(allergen) || allergen.includes(foodGroupName)
+          );
+        });
+
+        if (filteredItems.length > 0) {
+          acc[macro] = filteredItems;
+        }
+
+        return acc;
+      }, {});
+    }
+  }
+
+  // Step 2: Apply diet type filter SECOND
+  if (answers.diet_type) {
+    filtered = Object.entries(filtered).reduce((acc, [macro, items]) => {
       let filteredItems = items;
 
       if (answers.diet_type === "Vegetarian") {
-        filteredItems = items.filter(item => !item.is_meat);
+        // Hide both is_meat and is_red_meat
+        filteredItems = items.filter(item => !item.is_meat && !item.is_red_meat);
       } else if (answers.diet_type === "No Red Meat") {
+        // Only hide is_red_meat
         filteredItems = items.filter(item => !item.is_red_meat);
       }
 
@@ -131,20 +169,23 @@ export default function NutritionAssessment() {
 
       return acc;
     }, {});
+  }
 
-    setFilteredFoodGroups(filtered);
+  setFilteredFoodGroups(filtered);
 
-    const foodPrefStep = steps.find((s) => s.key === "food_preferences");
-    if (foodPrefStep) {
-      foodPrefStep.options = Object.fromEntries(
-        Object.entries(filtered).map(([macro, items]) => [
-          macro,
-          items.map((i) => i.name), 
-        ])
-      );
-    }
+  // Update food preferences step options
+  const foodPrefStep = steps.find((s) => s.key === "food_preferences");
+  if (foodPrefStep) {
+    foodPrefStep.options = Object.fromEntries(
+      Object.entries(filtered).map(([macro, items]) => [
+        macro,
+        items.map((i) => i.name),
+      ])
+    );
+  }
 
-  }, [answers.diet_type, foodGroups]);
+}, [answers.diet_type, answers.allergies, allergensList, foodGroups]);
+  
 
   const getBestSpecificFood = async (foodGroupId, foodGroupName) => {
     try {
@@ -377,7 +418,7 @@ const food_preferences_payload = Object.entries(selectedSpecificFoods).flatMap((
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1 bg-gray-800">
+    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1 bg-gray-900">
       <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: "center", padding: 24 }}>
         {current.type === "info" ? (
           <>
@@ -401,14 +442,14 @@ const food_preferences_payload = Object.entries(selectedSpecificFoods).flatMap((
               <TouchableOpacity
                 key={dietType}
                 onPress={() => selectDietType(dietType)}
-                className={`p-4 rounded-lg border-2 ${
+                className={`p-4 rounded-lg border ${
                   answers.diet_type === dietType 
-                    ? "border-purple-500 bg-purple-900/30" 
-                    : "border-gray-500 bg-gray-700"
+                    ? "border-blue-400 bg-blue-400" 
+                    : "border-gray-700 bg-gray-800"
                 }`}
               >
                 <Text className={`text-center font-semibold text-lg ${
-                  answers.diet_type === dietType ? "text-purple-300" : "text-white"
+                  answers.diet_type === dietType ? "text-white" : "text-gray-200"
                 }`}>
                   {dietType}
                 </Text>
@@ -442,8 +483,8 @@ const food_preferences_payload = Object.entries(selectedSpecificFoods).flatMap((
                     onPress={() => toggleFood(macro, item.id)}
                     className={`px-4 py-2 rounded ${
                       answers.food_preferences?.[macro]?.includes(item.id)
-                        ? "bg-green-600"
-                        : "bg-gray-500"
+                        ? "bg-blue-400"
+                        : "bg-gray-700"
                     }`}
                   >
                     <Text className="text-white">{String(item.name)}</Text>
@@ -461,21 +502,21 @@ const food_preferences_payload = Object.entries(selectedSpecificFoods).flatMap((
                   <TouchableOpacity
                     key={`${food.food_group_id}-${index}`}
                     onPress={() => openFoodSelectionModal(macro, food.food_group_id, food.food_group_name, food)}
-                    className="bg-gradient-to-r from-purple-600 to-purple-700 p-4 rounded-lg border border-purple-400"
+                    className="bg-gray-900 p-4 rounded-lg border border-blue-400"
                   >
                     <View className="flex-row justify-between items-center">
                       <View className="flex-1">
                         <Text className="text-white font-semibold text-lg">{food.name}</Text>
-                        <Text className="text-purple-200 text-sm">from {food.food_group_name}</Text>
+                        <Text className="text-blue-100 text-sm">from {food.food_group_name}</Text>
                         {food.nutritional_info && (
-                          <Text className="text-purple-100 text-xs mt-1">
+                          <Text className="text-blue-100 text-xs mt-1">
                             {food.nutritional_info.calories ? `${food.nutritional_info.calories} cal` : 'Nutritional info available'}
                           </Text>
                         )}
                       </View>
                       <View className="flex-row items-center">
-                        <Text className="text-purple-200 text-sm mr-2">Change</Text>
-                        <Ionicons name="chevron-forward" size={20} color="#c4b5fd" />
+                        <Text className="text-blue-100 text-sm mr-2">Change</Text>
+                        <Ionicons name="chevron-forward" size={20} color="#dbeafe" />
                       </View>
                     </View>
                   </TouchableOpacity>
@@ -490,7 +531,7 @@ const food_preferences_payload = Object.entries(selectedSpecificFoods).flatMap((
                 <TouchableOpacity
                   key={a.id}
                   onPress={() => toggleAllergy(a.id)}
-                  className={`px-4 py-2 rounded ${answers.allergies?.includes(a.id) ? "bg-red-600" : "bg-gray-500"}`}
+                  className={`px-4 py-2 rounded ${answers.allergies?.includes(a.id) ? "bg-red-600" : "bg-gray-700"}`}
                 >
                   <Text className="text-white">{a.name}</Text>
                 </TouchableOpacity>
@@ -498,8 +539,9 @@ const food_preferences_payload = Object.entries(selectedSpecificFoods).flatMap((
             </View>
             {answers.allergies?.includes("Other") && (
               <TextInput 
-                className="bg-gray-200 mt-4 p-3 rounded" 
-                placeholder="Please specify your allergy" 
+                className="bg-gray-800 border border-gray-700 mt-4 p-3 rounded text-white" 
+                placeholder="Please specify your allergy"
+                placeholderTextColor="#9CA3AF"
                 value={otherAllergy} 
                 onChangeText={setOtherAllergy} 
               />
@@ -529,11 +571,11 @@ const food_preferences_payload = Object.entries(selectedSpecificFoods).flatMap((
                   onPress={() => setModalSelected(item.id)}
                   className={`p-4 rounded-lg mb-2 border ${
                     modalSelected === item.id 
-                      ? "border-purple-600 bg-purple-50" 
+                      ? "border-blue-600 bg-blue-50" 
                       : "border-gray-200 bg-gray-50"
                   }`}
                 >
-                  <Text className={`font-semibold ${modalSelected === item.id ? 'text-purple-800' : 'text-gray-800'}`}>
+                  <Text className={`font-semibold ${modalSelected === item.id ? 'text-blue-800' : 'text-gray-800'}`}>
                     {item.name}
                   </Text>
                   {item.nutritional_info && (
@@ -557,7 +599,7 @@ const food_preferences_payload = Object.entries(selectedSpecificFoods).flatMap((
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={confirmFoodSelection}
-                className="bg-purple-600 px-6 py-3 rounded-lg ml-2"
+                className="bg-blue-500 px-6 py-3 rounded-lg ml-2"
               >
                 <Text className="text-white font-bold">Confirm</Text>
               </TouchableOpacity>
@@ -565,13 +607,16 @@ const food_preferences_payload = Object.entries(selectedSpecificFoods).flatMap((
           </View>
         </View>
       </Modal>
-      <View className="flex-row justify-between items-center p-4 border-t border-gray-700 bg-gray-900">
+      <View 
+        className="flex-row justify-between items-center p-4 border-t border-gray-700 bg-gray-900"
+        style={{ paddingBottom: insets.bottom + 16 }}
+      >
         {step > 0 ? (
           <TouchableOpacity
             onPress={goBack}
-            className="w-12 h-12 rounded-full bg-gray-600 justify-center items-center"
+            className="w-12 h-12 rounded-full bg-gray-700 justify-center items-center"
           >
-            <Ionicons name="arrow-back" size={20} color="white" />
+            <Ionicons name="arrow-back" size={20} color="#fff" />
           </TouchableOpacity>
         ) : (
           <View className="w-12" />
@@ -579,7 +624,7 @@ const food_preferences_payload = Object.entries(selectedSpecificFoods).flatMap((
 
         <TouchableOpacity
           onPress={goNext}
-          className="flex-1 ml-4 bg-purple-600 py-4 rounded-lg"
+          className="flex-1 ml-4 bg-blue-400 py-4 rounded-lg justify-center items-center"
           disabled={loadingSpecificFoods}
         >
           <Text className="text-white text-center font-bold text-lg">

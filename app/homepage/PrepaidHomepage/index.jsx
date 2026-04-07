@@ -35,7 +35,6 @@ export default function PrepaidHomepage() {
   const [totalInsideLoading, setTotalInsideLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-
   const slideAnim = useRef(new Animated.Value(30)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -92,7 +91,6 @@ export default function PrepaidHomepage() {
     }
   };
 
- 
   useEffect(() => {
     if (rfid_tag) {
       AsyncStorage.setItem("rfid_tag", rfid_tag.toString());
@@ -200,22 +198,19 @@ export default function PrepaidHomepage() {
   }, [email]);
 
   return (
-    <View className="flex-1 bg-slate-50">
-      <View className="bg-white shadow-sm border-b border-gray-100">
+    <View className="flex-1 bg-gray-900">
+      <View className="bg-gray-900 shadow-sm border-b border-gray-900">
         <View className="flex-row justify-between items-center px-6 pt-12 pb-4">
           <View className="flex-1">
-            <Text className="text-2xl font-bold text-gray-800">Dashboard</Text>
+            <Text className="text-2xl font-bold text-white">Dashboard</Text>
             <View className="flex-row items-center mt-1">
-              <Text className="text-gray-500 text-sm mr-2">SwiftPass Prepaid</Text>
-              <View
-                className={`w-2.5 h-2.5 rounded-full ${
-                  profile?.profile_image_url ? "bg-emerald-500" : "bg-orange-400"
-                }`}
-              />
+              <Text className="text-white text-sm">
+                SwiftPass x {profile?.gym_name || 'Loading...'}
+              </Text>
             </View>
           </View>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={() => setShowProfileModal(true)}
             className="bg-white rounded-2xl shadow-md border border-gray-200"
           >
@@ -227,7 +222,7 @@ export default function PrepaidHomepage() {
             ) : (
               <View className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                 <Text className="text-white font-bold text-lg">
-                  {profile?.name?.charAt(0) || "U"}
+                  {profile?.full_name?.charAt(0) || "U"}
                 </Text>
               </View>
             )}
@@ -247,56 +242,90 @@ export default function PrepaidHomepage() {
             opacity: fadeAnim,
           }}
         >
-          <View className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-5">
+          <View className="bg-gray-700 rounded-2xl p-6 shadow-sm border border-gray-100 mb-5">
             <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-lg font-semibold text-gray-800">Current Balance</Text>
-              <View className="bg-blue-100 px-3 py-1 rounded-full">
-                <Text className="text-blue-700 text-xs font-medium">PREPAID</Text>
-              </View>
+              <Text className="text-lg font-semibold text-white">Current Balance</Text>
+              {(() => {
+                if (!profile) return null;
+                
+                const balance = parseFloat(profile.current_balance || 0);
+                const sessionFee = parseFloat(profile.session_fee || 0);
+                
+                let statusText = 'UNKNOWN';
+                let bgColor = 'bg-gray-100';
+                let textColor = 'text-gray-700';
+                
+                if (profile.status === 'inactive' || profile.status === 'banned') {
+                  statusText = profile.status.toUpperCase();
+                  bgColor = 'bg-red-100';
+                  textColor = 'text-red-700';
+                } else if (balance <= 0) {
+                  statusText = 'INACTIVE';
+                  bgColor = 'bg-red-100';
+                  textColor = 'text-red-700';
+                } else if (balance < sessionFee) {
+                  statusText = 'LOW BALANCE';
+                  bgColor = 'bg-orange-100';
+                  textColor = 'text-orange-700';
+                } else {
+                  statusText = 'ACTIVE';
+                  bgColor = 'bg-green-100';
+                  textColor = 'text-green-700';
+                }
+                
+                return (
+                  <View className={`px-3 py-1 rounded-full ${bgColor}`}>
+                    <Text className={`text-xs font-medium ${textColor}`}>
+                      {statusText}
+                    </Text>
+                  </View>
+                );
+              })()}
             </View>
-            
+
             {loading ? (
               <ActivityIndicator size="small" color="#3b82f6" />
             ) : (
-              <Text className="text-2xl font-bold text-gray-900">
+              <Text className="text-2xl font-bold text-green-500">
                 ₱{parseFloat(balance).toFixed(2)}
               </Text>
             )}
           </View>
 
-          <View className="bg-white rounded-2xl p-4 mb-6">
-            <View className="flex-row items-center mb-3">
-              <View className="w-2 h-2 bg-green-400 rounded-full mr-2" />
-              <Text className="text-black text-sm font-medium">Live Stats</Text>
-            </View>
-            
-            <Text className="text-black text-sm mb-2 opacity-80">Currently in Gym</Text>
-            {totalInsideLoading ? (
-              <ActivityIndicator size="small" color="#000000" />
-            ) : (
-              <View className="flex-row items-baseline">
-                <Text className="text-black text-xl font-bold mr-2">{totalInside}</Text>
-                <Text className="text-black text-base opacity-70">
-                  member{totalInside === 1 ? '' : 's'}
-                </Text>
+          <View className="bg-gray-700 border border-gray-100 rounded-2xl p-6 mb-6">
+            <View className="flex-row items-center justify-between">
+              <View className="flex-row items-center">
+                <View className="w-3 h-3 bg-green-500 rounded-full mr-2" />
+                <Text className="text-white text-base font-medium font-bold">Currently in Gym</Text>
               </View>
-            )}
+              
+              {totalInsideLoading ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                <View className="flex-row items-baseline">
+                  <Text className="text-white text-3xl font-bold mr-2">{totalInside}</Text>
+                  <Text className="text-white text-base opacity-70">
+                    {totalInside === 1 ? 'person' : 'people'}
+                  </Text>
+                </View>
+              )}
+            </View>
           </View>
 
-          <Text className="text-lg font-semibold text-gray-800 mb-4">Quick Actions</Text>
-          
+          <Text className="text-lg font-semibold text-white mb-4">Quick Actions</Text>
+
           <View className="space-y-4 mb-6">
             <TouchableOpacity
               onPress={handleExercisePlannerPress}
-              className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex-row items-center justify-between active:bg-gray-50"
+              className="bg-gray-700 rounded-xl p-5 shadow-sm border border-gray-100 flex-row items-center justify-between active:bg-gray-50"
             >
               <View className="flex-row items-center flex-1">
                 <View className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mr-4">
                   <Text className="text-orange-600 text-xl">💪</Text>
                 </View>
                 <View className="flex-1">
-                  <Text className="text-gray-900 font-semibold text-base">Exercise Planner</Text>
-                  <Text className="text-gray-500 text-sm">Create your workout routine</Text>
+                  <Text className="text-white font-semibold text-base">Exercise Guidance</Text>
+                  <Text className="text-white text-xm">Train smarter, get results</Text>
                 </View>
               </View>
               <Text className="text-gray-400 text-lg">→</Text>
@@ -304,15 +333,15 @@ export default function PrepaidHomepage() {
 
             <TouchableOpacity
               onPress={handleNutritionPlannerPress}
-              className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex-row items-center justify-between active:bg-gray-50"
+              className="bg-gray-700 rounded-xl p-5 shadow-sm border border-gray-100 flex-row items-center justify-between active:bg-gray-50"
             >
               <View className="flex-row items-center flex-1">
                 <View className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mr-4">
                   <Text className="text-green-600 text-xl">🥗</Text>
                 </View>
                 <View className="flex-1">
-                  <Text className="text-gray-900 font-semibold text-base">Meal Planner</Text>
-                  <Text className="text-gray-500 text-sm">Plan your nutrition goals</Text>
+                  <Text className="text-white font-semibold text-base">Nutrition Guidance</Text>
+                  <Text className="text-white text-xm">Eat better, feel stronger</Text>
                 </View>
               </View>
               <Text className="text-gray-400 text-lg">→</Text>

@@ -1,5 +1,3 @@
-
-
 import Constants from "expo-constants";
 
 const MEDIA_URL =
@@ -8,5 +6,10 @@ const MEDIA_URL =
 
 export const getFullPhotoUrl = (relativePath) => {
   if (!relativePath) return null;
-  return `${MEDIA_URL}/${relativePath}`;
+  
+  const cleanPath = relativePath.startsWith('/') 
+    ? relativePath.substring(1) 
+    : relativePath;
+  
+  return `${MEDIA_URL}/${cleanPath}`;
 };

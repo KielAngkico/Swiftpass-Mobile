@@ -199,154 +199,214 @@ export default function SubscriptionHomepage() {
     if (email) fetchProfileData();
   }, [email]);
 
-  return (
-    <View className="flex-1 bg-gray-900">
-      <View className="bg-gray-900 shadow-sm border-b border-gray-900">
-        <View className="flex-row justify-between items-center px-6 pt-12 pb-4">
-          <View className="flex-1">
-            <Text className="text-2xl font-bold text-white">Dashboard</Text>
-            <View className="flex-row items-center mt-1">
-              <Text className="text-white text-sm mr-2">SwiftPass System</Text>
-              <View
-                className={`w-2.5 h-2.5 rounded-full ${
-                  profile?.profile_image_url ? "bg-emerald-500" : "bg-orange-400"
-                }`}
-              />
-            </View>
+return (
+  <View className="flex-1 bg-gray-900">
+    <View className="bg-gray-900 shadow-sm border-b border-gray-900">
+      <View className="flex-row justify-between items-center px-6 pt-12 pb-4">
+        <View className="flex-1">
+          <Text className="text-2xl font-bold text-white">Dashboard</Text>
+          <View className="flex-row items-center mt-1">
+            <Text className="text-white text-sm mr-2">SwiftPass System</Text>
+            <View
+              className={`w-2.5 h-2.5 rounded-full ${
+                profile?.profile_image_url ? "bg-emerald-500" : "bg-orange-400"
+              }`}
+            />
           </View>
+        </View>
 
-          <TouchableOpacity 
-            onPress={() => setShowProfileModal(true)}
-            className="bg-white rounded-2xl shadow-md border border-gray-200"
-          >
-            {profile?.profile_image_url ? (
-              <Image
-                source={{ uri: `${getFullPhotoUrl(profile.profile_image_url)}?t=${Date.now()}` }}
-                className="w-14 h-14 rounded-2xl"
-              />
-            ) : (
-              <View className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                <Text className="text-white font-bold text-lg">
-                  {profile?.name?.charAt(0) || "U"}
+        <TouchableOpacity 
+          onPress={() => setShowProfileModal(true)}
+          className="bg-white rounded-2xl shadow-md border border-gray-200"
+        >
+          {profile?.profile_image_url ? (
+            <Image
+              source={{ uri: `${getFullPhotoUrl(profile.profile_image_url)}?t=${Date.now()}` }}
+              className="w-14 h-14 rounded-2xl"
+            />
+          ) : (
+            <View className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+              <Text className="text-white font-bold text-lg">
+                {profile?.name?.charAt(0) || "U"}
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
+    </View>
+
+    <ScrollView
+      className="flex-1"
+      contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 20 }}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      showsVerticalScrollIndicator={false}
+    >
+      <Animated.View
+        style={{
+          transform: [{ translateY: slideAnim }],
+          opacity: fadeAnim,
+        }}
+      >
+      {/* Membership Card with Countdown */}
+      <View className="bg-gray-700 rounded-2xl p-6 shadow-sm border border-gray-100 mb-5">
+        <View className="flex-row items-center justify-between mb-4">
+          <Text className="text-lg font-semibold text-white">Membership Status</Text>
+          
+          {/* Dynamic Status Badge */}
+          {loading ? (
+            <ActivityIndicator size="small" color="#3b82f6" />
+          ) : (
+            <View 
+              className={`px-3 py-1 rounded-full ${
+                profile?.status === 'active' 
+                  ? 'bg-green-100' 
+                  : profile?.status === 'inactive'
+                  ? 'bg-red-100'
+                  : 'bg-gray-100'
+              }`}
+            >
+              <Text 
+                className={`text-xs font-medium ${
+                  profile?.status === 'active'
+                    ? 'text-green-700'
+                    : profile?.status === 'inactive'
+                    ? 'text-red-700'
+                    : 'text-gray-700'
+                }`}
+              >
+                {profile?.status?.toUpperCase() || 'UNKNOWN'}
+              </Text>
+            </View>
+          )}
+        </View>
+        
+        <Text className="text-white text-sm mb-2">Valid Until</Text>
+        {loading ? (
+          <ActivityIndicator size="small" color="#3b82f6" />
+        ) : subscriptionExpiry ? (
+          <View>
+            <Text className="text-2xl font-bold text-white">
+              {new Date(subscriptionExpiry).toLocaleDateString('en-US', { 
+                weekday: 'short',
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+              })}
+            </Text>
+            
+            {/* Simple Days Countdown */}
+          {(() => {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const expiryDate = new Date(subscriptionExpiry);
+            expiryDate.setHours(0, 0, 0, 0);
+            const daysLeft = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
+            
+            // Only show when 7 days or less
+            if (daysLeft >= 0 && daysLeft <= 7 && profile?.status === 'active') {
+              return (
+                <Text className="text-yellow-400 text-sm mt-2">
+                  {daysLeft === 0 
+                    ? '🟠 Expires today!' 
+                    : `🟡 ${daysLeft} ${daysLeft === 1 ? 'day' : 'days'} left`}
                 </Text>
+              );
+            } else if (profile?.status === 'inactive') {
+              return (
+                <Text className="text-red-400 text-sm mt-2">
+                   🔴 Membership has expired
+                </Text>
+              );
+            }
+            return null; // Hide if more than 7 days
+          })()}
+          </View>
+        ) : (
+          <Text className="text-gray-400 text-lg">No active subscription</Text>
+        )}
+      </View>
+<View className="bg-gray-700 border border-gray-100 rounded-2xl p-6 mb-6">
+  <View className="flex-row items-center justify-between">
+    {/* Left side - Label */}
+    <View className="flex-row items-center">
+      <View className="w-3 h-3 bg-green-500 rounded-full mr-2" />
+      <Text className="text-white text-base font-medium font-bold">Currently in Gym</Text>
+    </View>
+    
+    {/* Right side - Count */}
+    {totalInsideLoading ? (
+      <ActivityIndicator size="small" color="#ffffff" />
+    ) : (
+      <View className="flex-row items-baseline">
+        <Text className="text-white text-3xl font-bold mr-2">{totalInside}</Text>
+        <Text className="text-white text-base opacity-70">
+          {totalInside === 1 ? 'person' : 'people'}
+        </Text>
+      </View>
+    )}
+  </View>
+</View>
+
+
+        <Text className="text-lg font-semibold text-white mb-4">Quick Actions</Text>
+        
+        <View className="space-y-4 mb-6">
+          {/* Exercise Planner */}
+          <TouchableOpacity
+            onPress={handleExercisePlannerPress}
+            className="bg-gray-700 rounded-xl p-5 shadow-sm border border-gray-100 flex-row items-center justify-between active:bg-gray-50"
+          >
+            <View className="flex-row items-center flex-1">
+              <View className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mr-4">
+                <Text className="text-orange-600 text-xl">💪</Text>
               </View>
-            )}
+              <View className="flex-1">
+                <Text className="text-white font-semibold text-base">Exercise Guidance</Text>
+                <Text className="text-white text-xm">Train smarter, get results</Text>
+              </View>
+            </View>
+            <Text className="text-gray-400 text-lg">→</Text>
+          </TouchableOpacity>
+
+          {/* Meal Planner */}
+          <TouchableOpacity
+            onPress={handleNutritionPlannerPress}
+            className="bg-gray-700 rounded-xl p-5 shadow-sm border border-gray-100 flex-row items-center justify-between active:bg-gray-50"
+          >
+            <View className="flex-row items-center flex-1">
+              <View className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mr-4">
+                <Text className="text-green-600 text-xl">🥗</Text>
+              </View>
+              <View className="flex-1">
+                <Text className="text-white font-semibold text-base">Nutrition Guidance</Text>
+                <Text className="text-white text-xm">Eat better, feel stronger</Text>
+              </View>
+            </View>
+            <Text className="text-gray-400 text-lg">→</Text>
           </TouchableOpacity>
         </View>
-      </View>
 
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 20 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        showsVerticalScrollIndicator={false}
-      >
-        <Animated.View
-          style={{
-            transform: [{ translateY: slideAnim }],
-            opacity: fadeAnim,
-          }}
-        >
-          <View className="bg-gray-700 rounded-2xl p-6 shadow-sm border border-gray-100 mb-5">
-            <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-lg font-semibold text-white">Membership Status</Text>
-              <View className="bg-green-100 px-3 py-1 rounded-full">
-                <Text className="text-green-700 text-xs font-medium">ACTIVE</Text>
-              </View>
-            </View>
-            
-            <Text className="text-white text-sm mb-2">Valid Until</Text>
-            {loading ? (
-              <ActivityIndicator size="small" color="#3b82f6" />
-            ) : subscriptionExpiry ? (
-              <Text className="text-2xl font-bold text-white">
-                {new Date(subscriptionExpiry).toLocaleDateString('en-US', { 
-                  weekday: 'short',
-                  year: 'numeric', 
-                  month: 'short', 
-                  day: 'numeric' 
-                })}
-              </Text>
-            ) : (
-              <Text className="text-gray-400 text-lg">No active subscription</Text>
-            )}
-          </View>
+        <View className="h-20" />
+      </Animated.View>
+    </ScrollView>
 
-          <View className="bg-gray-700 rounded-2xl p-6 mb-6">
-            <View className="flex-row items-center mb-3">
-              <View className="w-3 h-3 bg-green-400 rounded-full mr-2" />
-              <Text className="text-white text-sm font-medium">Live Stats</Text>
-            </View>
-            
-            <Text className="text-white text-sm mb-2 opacity-80">Currently in Gym</Text>
-            {totalInsideLoading ? (
-              <ActivityIndicator size="small" color="#000000" />
-            ) : (
-              <View className="flex-row items-baseline">
-                <Text className="text-white text-3xl font-bold mr-2">{totalInside}</Text>
-                <Text className="text-white text-base opacity-70">
-                  member{totalInside === 1 ? '' : 's'}
-                </Text>
-              </View>
-            )}
-          </View>
-
-          <Text className="text-lg font-semibold text-white  mb-4">Quick Actions</Text>
-          
-          <View className="space-y-4 mb-6">
-            <TouchableOpacity
-              onPress={handleExercisePlannerPress}
-              className="bg-gray-700 rounded-xl p-5 shadow-sm border border-gray-100 flex-row items-center justify-between active:bg-gray-50"
-            >
-              <View className="flex-row items-center flex-1">
-                <View className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mr-4">
-                  <Text className="text-orange-600 text-xl">💪</Text>
-                </View>
-                <View className="flex-1">
-                  <Text className="text-white font-semibold text-base">Exercise Planner</Text>
-                  <Text className="text-white text-sm">Create your workout routine</Text>
-                </View>
-              </View>
-              <Text className="text-gray-400 text-lg">→</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={handleNutritionPlannerPress}
-              className="bg-gray-700 rounded-xl p-5 shadow-sm border border-gray-100 flex-row items-center justify-between active:bg-gray-50"
-            >
-              <View className="flex-row items-center flex-1">
-                <View className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mr-4">
-                  <Text className="text-green-600 text-xl">🥗</Text>
-                </View>
-                <View className="flex-1">
-                  <Text className="text-white font-semibold text-base">Meal Planner</Text>
-                  <Text className="text-white text-sm">Plan your nutrition goals</Text>
-                </View>
-              </View>
-              <Text className="text-gray-400 text-lg">→</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View className="h-20" />
-        </Animated.View>
-      </ScrollView>
-
-      <View className="bg-white border-t border-gray-200 safe-area-bottom">
-        <NavigationBar
-          email={email}
-          rfid_tag={rfid_tag}
-          system_type={system_type}
-          admin_id={admin_id}
-        />
-      </View>
-
-      <ProfileModal
-        visible={showProfileModal}
-        onClose={() => setShowProfileModal(false)}
-        profile={profile}
+    <View className="bg-white border-t border-gray-200 safe-area-bottom">
+      <NavigationBar
         email={email}
+        rfid_tag={rfid_tag}
         system_type={system_type}
+        admin_id={admin_id}
       />
     </View>
-  );
+
+    <ProfileModal
+      visible={showProfileModal}
+      onClose={() => setShowProfileModal(false)}
+      profile={profile}
+      email={email}
+      system_type={system_type}
+    />
+  </View>
+);
+
 }

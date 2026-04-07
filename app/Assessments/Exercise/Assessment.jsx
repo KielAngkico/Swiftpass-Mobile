@@ -7,9 +7,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  SafeAreaView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import API from "../../../backend-api/services/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -71,15 +73,34 @@ const steps = [
 
 export default function ExerciseAssessment() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState({});
   const [splitOptions, setSplitOptions] = useState([]);
   const [reviewExercises, setReviewExercises] = useState([]);
   const [loading, setLoading] = useState(false);
-  
+   const [username, setUsername] = useState(""); 
   const current = steps[step];
-  const username = "Kiel";
+  useEffect(() => {
+    const fetchUsername = async () => {
+      try {
+        const memberId = await AsyncStorage.getItem("member_id");  
 
+
+        const initialRes = await API.get(`/assessment/initial/${memberId}`);
+        const { username } = initialRes.data;  
+
+        setUsername(username); 
+
+        console.log("Fetched Username:", username);  
+
+      } catch (err) {
+        console.error("Error fetching initial data:", err);  
+      }
+    };
+
+    fetchUsername();  
+  }, []);
   const handleSelect = async (key, value) => {
     setAnswers((prev) => ({ ...prev, [key]: value }));
 
@@ -244,7 +265,7 @@ const goNext = async () => {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
-      className="flex-1 bg-gray-800"
+      className="flex-1 bg-gray-900"
     >
       <ScrollView
         contentContainerStyle={{ flexGrow: 1, justifyContent: "center", padding: 24 }}
@@ -291,15 +312,15 @@ const goNext = async () => {
               key={opt}
               className={`py-4 px-4 rounded-lg mb-3 border ${
                 answers.split_choice === opt
-                  ? "bg-white border-white"
-                  : "bg-gray-600 border-gray-400"
+                  ? "bg-blue-400 border-blue-400"
+                  : "bg-gray-800 border-gray-700"
               }`}
               onPress={() => handleSelect("split_choice", opt)}
               disabled={loading}
             >
               <Text
                 className={`font-semibold text-lg ${
-                  answers.split_choice === opt ? "text-black" : "text-white"
+                  answers.split_choice === opt ? "text-white" : "text-gray-200"
                 }`}
               >
                 {String(opt)}
@@ -314,15 +335,15 @@ const goNext = async () => {
               key={opt}
               className={`py-4 px-4 rounded-lg mb-3 border ${
                 answers[current.key] === opt
-                  ? "bg-white border-white"
-                  : "bg-gray-600 border-gray-400"
+                  ? "bg-blue-400 border-blue-400"
+                  : "bg-gray-800 border-gray-700"
               }`}
               onPress={() => handleSelect(current.key, opt)}
               disabled={loading}
             >
               <Text
                 className={`font-semibold text-lg ${
-                  answers[current.key] === opt ? "text-black" : "text-white"
+                  answers[current.key] === opt ? "text-white" : "text-gray-200"
                 }`}
               >
                 {String(opt)}
@@ -345,15 +366,15 @@ const goNext = async () => {
             ) : (
               <>
 
-                <View className="mb-6 p-4 bg-gradient-to-r from-purple-600 to-purple-700 rounded-lg border border-purple-400">
+                <View className="mb-6 p-4 bg-gray-800 rounded-lg border border-gray-100">
                   <Text className="text-white text-center text-lg font-bold mb-2">Your Workout Plan</Text>
-                  <Text className="text-purple-200 text-center mb-1">
+                  <Text className="text-blue-100 text-center mb-1">
                     <Text className="font-semibold">Split:</Text> {answers.split_choice}
                   </Text>
-                  <Text className="text-purple-200 text-center mb-1">
+                  <Text className="text-blue-100 text-center mb-1">
                     <Text className="font-semibold">Days per week:</Text> {answers.workout_days}
                   </Text>
-                  <Text className="text-purple-200 text-center">
+                  <Text className="text-blue-100 text-center">
                     <Text className="font-semibold">Level:</Text> {answers.athlete_level}
                   </Text>
                 </View>
@@ -364,13 +385,13 @@ const goNext = async () => {
                   </Text>
                   
                   {reviewExercises.map((day, index) => (
-                    <View key={index} className="mb-6 bg-gray-700 rounded-lg border border-gray-600 overflow-hidden">
+                    <View key={index} className="mb-6 bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
  
-                      <View className="bg-gradient-to-r from-purple-700 to-purple-800 p-4">
+                      <View className="bg-blue-400 p-4">
                         <Text className="text-white font-bold text-lg text-center">
                           Day {day.day_number}
                         </Text>
-                        <Text className="text-purple-200 text-center text-sm mt-1">
+                        <Text className="text-blue-100 text-center text-sm mt-1">
                           {day.day_title}
                         </Text>
                       </View>
@@ -382,7 +403,7 @@ const goNext = async () => {
                               {day.exercises.length} exercises planned
                             </Text>
                             {day.exercises.map((ex, exIndex) => (
-                              <View key={exIndex} className="mb-3 p-3 bg-gray-800 rounded-lg border border-gray-600">
+                              <View key={exIndex} className="mb-3 p-3 bg-gray-700 rounded-lg border border-gray-600">
                                 <Text className="text-white font-semibold text-base mb-1">
                                   {ex.name}
                                 </Text>
@@ -391,7 +412,7 @@ const goNext = async () => {
                                   <Text className="text-gray-300 text-sm">
                                     {ex.sets ? `${ex.sets} sets` : '3 sets'} × {ex.reps || '6-12 reps'}
                                   </Text>
-                                  <Text className="text-purple-300 text-sm font-medium">
+                                  <Text className="text-blue-300 text-sm font-medium">
                                     {ex.muscle_group}
                                   </Text>
                                 </View>
@@ -425,14 +446,17 @@ const goNext = async () => {
         )}
       </ScrollView>
 
-      <View className="flex-row justify-between items-center p-4 border-t border-gray-700 bg-gray-900">
+      <View 
+        className="flex-row justify-between items-center p-4 border-t border-gray-700 bg-gray-900"
+        style={{ paddingBottom: insets.bottom + 16 }}
+      >
         {step > 0 && current.key !== "calculating" ? (
           <TouchableOpacity
             onPress={goBack}
-            className="w-12 h-12 rounded-full bg-gray-600 justify-center items-center"
+            className="w-12 h-12 rounded-full bg-gray-700 justify-center items-center"
             disabled={loading}
           >
-            <Ionicons name="arrow-back" size={20} color="white" />
+            <Ionicons name="arrow-back" size={20} color="#fff" />
           </TouchableOpacity>
         ) : (
           <View className="w-12" />
@@ -440,8 +464,8 @@ const goNext = async () => {
 
         <TouchableOpacity
           onPress={goNext}
-          className={`flex-1 ml-4 py-4 rounded-lg ${
-            loading ? "bg-gray-500" : "bg-purple-600"
+          className={`flex-1 ml-4 py-4 rounded-lg justify-center items-center ${
+            loading ? "bg-gray-500" : "bg-blue-400"
           }`}
           disabled={loading}
         >

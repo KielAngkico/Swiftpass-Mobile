@@ -14,12 +14,14 @@ import { useRouter } from "expo-router";
 import API from "../../backend-api/services/api";
 
 export default function ChangePassword() {
+  const [step, setStep] = useState(1); // 1 = verify current PIN, 2 = set new PIN
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
+  const tokenKey = "accessToken"; // AsyncStorage key
 
   useEffect(() => {
     checkAuthStatus();
@@ -27,157 +29,141 @@ export default function ChangePassword() {
 
   const checkAuthStatus = async () => {
     try {
-      const token = await AsyncStorage.getItem("accessToken");
-      const userInfo = await AsyncStorage.getItem("userInfo");
-      
-      console.log("🔑 Token exists:", !!token);
-      console.log("🔑 Token length:", token?.length || 0);
-      console.log("👤 User info exists:", !!userInfo);
-      console.log("👤 User info:", userInfo);
-      
+      const token = await AsyncStorage.getItem(tokenKey);
       if (!token) {
-        Alert.alert("Authentication Error", "No valid session found. Please login again.", [
+        Alert.alert("Authentication Error", "Please login again.", [
           { text: "OK", onPress: () => router.replace("/login") }
         ]);
       }
-    } catch (error) {
-      console.error("Error checking auth status:", error);
+    } catch (err) {
+      console.error("Auth check error:", err);
     }
   };
 
-  const handleChangePassword = async () => {
-    if (!currentPassword.trim()) {
-      Alert.alert("Error", "Please enter your current password.");
-      return;
+const handleVerifyCurrentPassword = async () => {
+  if (currentPassword.length !== 4) {
+    Alert.alert("Error", "Enter your 4-digit current PIN.");
+    return;
+  }
+
+  setIsLoading(true);
+
+  try {
+    const token = await AsyncStorage.getItem(tokenKey);
+    if (!token) throw new Error("No token found.");
+
+    const res = await API.post(
+      "/auth/verify-current-pin", // <-- updated endpoint
+      { currentPassword },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    if (res.data.success) {
+      setStep(2); // move to set new PIN
+      setCurrentPassword(""); // clear input
+    } else {
+      Alert.alert("Error", res.data.message || "Current PIN incorrect.");
     }
+  } catch (err) {
+    console.error("Verify current PIN error:", err);
+    Alert.alert("Error", err.response?.data?.message || err.message || "Server error");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
-    if (newPassword.length < 6) {
-      Alert.alert("Error", "New password must be at least 6 characters long.");
-      return;
+const handleSetNewPassword = async () => {
+  if (newPassword.length !== 4 || confirmPassword.length !== 4) {
+    Alert.alert("Error", "PIN must be 4 digits.");
+    return;
+  }
+  if (newPassword !== confirmPassword) {
+    Alert.alert("Error", "New PIN and confirmation do not match.");
+    return;
+  }
+
+  setIsLoading(true);
+
+  try {
+    const token = await AsyncStorage.getItem(tokenKey);
+    const res = await API.post(
+      "/auth/change-password", // backend endpoint for updating PIN
+      { newPassword }, // only send new PIN
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    if (res.data.success) {
+      Alert.alert("Success", "PIN updated successfully.", [
+        { text: "OK", onPress: () => router.replace("/homepage") }
+      ]);
+    } else {
+      Alert.alert("Error", res.data.message || "Failed to update PIN.");
     }
+  } catch (err) {
+    console.error("Set new PIN error:", err);
+    Alert.alert("Error", err.response?.data?.message || err.message || "Server error");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
-    if (newPassword !== confirmPassword) {
-      Alert.alert("Error", "New password and confirmation do not match.");
-      return;
-    }
 
-    setIsLoading(true);
-
-    try {
-
-      const token = await AsyncStorage.getItem("accessToken");
-      console.log("🔑 Retrieved Token in ChangePassword:", token ? "EXISTS" : "NULL");
-      console.log("🔑 Token starts with:", token?.substring(0, 20) + "...");
-      
-      if (!token) {
-        Alert.alert("Authentication Error", "You are not logged in. Please login again.", [
-          { text: "Login", onPress: () => router.replace("/login") }
-        ]);
-        return;
-      }
-
-      console.log("📡 Making API request to /auth/change-password");
-      console.log("📡 Request headers:", { Authorization: `Bearer ${token.substring(0, 20)}...` });
-
-      const res = await API.post(
-        "/auth/change-password",
-        { 
-          currentPassword, 
-          newPassword 
-        },
-        { 
-          headers: { 
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          } 
-        }
-      );
-
-      console.log("✅ API Response:", res.data);
-
-      if (res.data.success) {
-        Alert.alert("Success", res.data.message || "Password changed successfully.", [
-          { text: "OK", onPress: () => router.back() }
-        ]);
-      } else {
-        Alert.alert("Error", res.data.message || "Failed to change password.");
-      }
-    } catch (error) {
-      console.error("❌ Change password error:", error);
-      console.error("❌ Error response:", error.response?.data);
-      console.error("❌ Error status:", error.response?.status);
-      
-      if (error.response?.status === 401) {
-        Alert.alert("Session Expired", "Your session has expired. Please login again.", [
-          { text: "Login", onPress: () => router.replace("/login") }
-        ]);
-      } else {
-        const errorMessage = error.response?.data?.message || 
-                           error.response?.data?.error || 
-                           error.message || 
-                           "Something went wrong.";
-        Alert.alert("Error", errorMessage);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const renderPinInput = (value, setValue) => (
+    <View className="flex-row justify-center space-x-3 mb-6">
+      {Array(4).fill(0).map((_, i) => (
+        <View
+          key={i}
+          className="w-14 h-14 bg-white rounded-lg border border-gray-300 items-center justify-center"
+        >
+          <Text className="text-2xl text-black font-bold">
+            {value[i] ? "•" : ""}
+          </Text>
+        </View>
+      ))}
+      <TextInput
+        value={value}
+        onChangeText={(text) => {
+          if (/^\d{0,4}$/.test(text)) setValue(text);
+        }}
+        keyboardType="numeric"
+        maxLength={4}
+        secureTextEntry
+        autoFocus
+        editable={!isLoading}
+        style={{ position: "absolute", opacity: 0, width: "100%", height: 60 }}
+      />
+    </View>
+  );
 
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       className="flex-1 bg-gray-900"
     >
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
-        keyboardShouldPersistTaps="handled"
-        className="px-6"
-      >
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" className="px-6">
         <View className="flex-1 justify-center items-center">
           <Text className="text-5xl font-bold text-white mt-10 mb-2 tracking-tight">
             SwiftPass
           </Text>
           <Text className="text-base text-white mb-10">
-            Change your account password
+            {step === 1 ? "Enter your current 4-digit PIN" : "Set your new 4-digit PIN"}
           </Text>
 
-          <TextInput
-            placeholder="Current Password"
-            value={currentPassword}
-            onChangeText={setCurrentPassword}
-            secureTextEntry
-            placeholderTextColor="#9E9E9E"
-            className="bg-[#FAFAFA] w-full rounded-2xl px-5 py-4 mb-4 text-base text-[#212121] border border-gray-300 shadow-sm"
-            editable={!isLoading}
-          />
-
-          <TextInput
-            placeholder="New Password"
-            value={newPassword}
-            onChangeText={setNewPassword}
-            secureTextEntry
-            placeholderTextColor="#9E9E9E"
-            className="bg-[#FAFAFA] w-full rounded-2xl px-5 py-4 mb-4 text-base text-[#212121] border border-gray-300 shadow-sm"
-            editable={!isLoading}
-          />
-
-          <TextInput
-            placeholder="Confirm New Password"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry
-            placeholderTextColor="#9E9E9E"
-            className="bg-[#FAFAFA] w-full rounded-2xl px-5 py-4 mb-6 text-base text-[#212121] border border-gray-300 shadow-sm"
-            editable={!isLoading}
-          />
+          {step === 1 && renderPinInput(currentPassword, setCurrentPassword)}
+          {step === 2 && (
+            <>
+              {renderPinInput(newPassword, setNewPassword)}
+              {renderPinInput(confirmPassword, setConfirmPassword)}
+            </>
+          )}
 
           <TouchableOpacity
-            onPress={handleChangePassword}
+            onPress={step === 1 ? handleVerifyCurrentPassword : handleSetNewPassword}
             disabled={isLoading}
-            className="w-full bg-blue-300 rounded-2xl py-4 shadow-md"
+            className={`w-full rounded-2xl py-4 shadow-md ${isLoading ? "bg-blue-300" : "bg-blue-500"}`}
           >
             <Text className="text-center text-white text-lg font-semibold">
-              {isLoading ? "Updating..." : "Update Password"}
+              {isLoading ? "Processing..." : step === 1 ? "Verify PIN" : "Update PIN"}
             </Text>
           </TouchableOpacity>
 
@@ -186,9 +172,7 @@ export default function ChangePassword() {
             disabled={isLoading}
             className="mt-4"
           >
-            <Text className="text-sm text-white font-semibold">
-              ← Back
-            </Text>
+            <Text className="text-sm text-white font-semibold">← Back</Text>
           </TouchableOpacity>
 
           <Text className="text-xs text-white mt-6">© 2025 SwiftPass. All rights reserved.</Text>

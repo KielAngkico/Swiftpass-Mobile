@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const { pool } = require('../db');
 
-
 router.get('/activity-log', async (req, res) => {
   console.log('Query params:', req.query);
 
@@ -16,6 +15,7 @@ router.get('/activity-log', async (req, res) => {
     const finalList = [];
 
     if (system_type === 'prepaid_entry') {
+      // ✅ Get tap-ups and new member activations
       const [tapUps] = await pool.query(
         `SELECT amount, timestamp, transaction_type, subscription_type 
          FROM AdminMembersTransactions 
@@ -26,6 +26,7 @@ router.get('/activity-log', async (req, res) => {
 
       tapUps.forEach(row => {
         finalList.push({
+          transaction_id: null,
           label: row.transaction_type === 'new_member' ? 'Activation' : 'Tap Up',
           amount: Number(row.amount),
           timestamp: row.timestamp,
@@ -33,15 +34,23 @@ router.get('/activity-log', async (req, res) => {
         });
       });
 
+      // ✅ FIXED: Only get entries where deducted_amount > 0 (exclude grace period)
       const [entries] = await pool.query(
-        `SELECT deducted_amount AS amount, entry_time AS timestamp 
+        `SELECT id, deducted_amount AS amount, entry_time AS timestamp, staff_name
          FROM AdminEntryLogs 
-         WHERE rfid_tag = ?`,
+         WHERE rfid_tag = ? 
+           AND deducted_amount > 0`,  // ✅ Only charged entries
         [rfid_tag]
       );
 
       entries.forEach(row => {
+        // ✅ Check if it was a grace period entry (shouldn't happen with WHERE clause above)
+        if (row.staff_name === 'Entry Grace Period') {
+          return; // Skip grace period entries
+        }
+
         finalList.push({
+          transaction_id: row.id,
           label: 'Gym Entry',
           amount: -Number(row.amount),
           timestamp: row.timestamp,
@@ -49,7 +58,7 @@ router.get('/activity-log', async (req, res) => {
       });
 
     } else if (system_type === 'subscription') {
-
+      // ✅ Get subscriptions
       const [subs] = await pool.query(
         `SELECT amount, timestamp, transaction_type, subscription_type 
          FROM AdminMembersTransactions 
@@ -63,6 +72,7 @@ router.get('/activity-log', async (req, res) => {
         const label = row.subscription_type ? `${labelBase}: ${row.subscription_type}` : labelBase;
 
         finalList.push({
+          transaction_id: null,
           label,
           amount: Number(row.amount),
           timestamp: row.timestamp,
@@ -73,9 +83,13 @@ router.get('/activity-log', async (req, res) => {
     } else {
       return res.status(400).json({ message: 'Invalid system_type' });
     }
+
+    // ✅ Sort by most recent first
     finalList.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
+    console.log(`✅ Returning ${finalList.length} transactions for ${rfid_tag}`);
     return res.json({ transactions: finalList });
+
   } catch (error) {
     console.error('SQL error:', error);
     return res.status(500).json({ message: 'Failed to fetch unified activity log' });

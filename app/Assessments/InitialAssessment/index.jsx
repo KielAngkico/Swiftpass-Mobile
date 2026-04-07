@@ -9,14 +9,16 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  SafeAreaView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import API from '../../../backend-api/services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const questions = [
-  { key: 'username', question: "What should we call you?", input: true },
+  { key: 'username', question: "Hello,What should we call you?", input: true },
   {
     key: 'body_goal',
     question: (name) => `Hello ${name || ''}, may we know your body goal?`,
@@ -47,6 +49,7 @@ const questions = [
 
 export default function InitialAssessment() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [step, setStep] = useState(0);
   const [formData, setFormData] = useState({});
   const [inputValue, setInputValue] = useState('');
@@ -93,7 +96,6 @@ const goNext = () => {
 
   setStep((prev) => prev + 1);
 };
-
 
   const goBack = () => {
     if (showCalories) {
@@ -156,7 +158,6 @@ const calorieOptions = () => {
   ];
 };
 
-
 const handleSubmit = async () => {
   setLoading(true);
 
@@ -205,157 +206,188 @@ const handleSubmit = async () => {
   }
 };
 
+return (
+  <KeyboardAvoidingView
+    behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    className="flex-1 bg-gray-900"
+  >
+    {loading ? (
+      <ActivityIndicator size="large" color="#5E17EB" className="mt-6" />
+    ) : showCalories ? (
+      <View className="flex-1">
+        <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 24 }}>
+          <Text className="text-2xl font-bold mb-6 text-center text-white">
+            Calorie Guide
+          </Text>
 
-
-  return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      className="flex-1 bg-gray-700"
-    >
-      {loading ? (
-        <ActivityIndicator size="large" color="#fff" className="mt-6" />
-      ) : showCalories ? (
-        <View className="flex-1">
-          <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 24 }}>
-            <Text className="text-2xl font-bold mb-6 text-center text-white">Calorie Guide</Text>
-            {calorieOptions().map((opt) => (
-              <TouchableOpacity
-                key={opt.label}
-                onPress={() => setFormData((prev) => ({
+          {calorieOptions().map((opt) => (
+            <TouchableOpacity
+              key={opt.label}
+              onPress={() =>
+                setFormData((prev) => ({
                   ...prev,
                   calories_target: opt.calories,
                   calorie_strategy: opt.strategy,
-                }))}
-                className={`p-4 rounded-lg mb-3 border ${
+                }))
+              }
+              className={`p-4 rounded-lg mb-3 border ${
+                formData.calories_target === opt.calories
+                  ? 'bg-blue-400 border-blue-400'
+                  : 'bg-gray-800 border-gray-700'
+              }`}
+            >
+              <Text
+                className={`text-lg font-semibold ${
                   formData.calories_target === opt.calories
-                    ? 'bg-white border-white'
-                    : 'bg-gray-600 border-gray-400'
+                    ? 'text-white'
+                    : 'text-gray-200'
                 }`}
               >
-                <Text className={`text-lg font-semibold ${
-                  formData.calories_target === opt.calories ? 'text-black' : 'text-white'
-                }`}>
-                  {opt.label}: {opt.calories} kcal
-                </Text>
-                <Text className="text-gray-300 text-sm">{opt.desc}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-          <View className="flex-row justify-between items-center p-4 border-t border-gray-500">
-            <TouchableOpacity
-              onPress={goBack}
-              className="w-12 h-12 rounded-full bg-gray-500 justify-center items-center"
-            >
-              <Ionicons name="arrow-back" size={20} color="white" />
+                {opt.label}: {opt.calories} kcal
+              </Text>
+              <Text className="text-gray-400 text-sm">{opt.desc}</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              onPress={handleSubmit}
-              className="flex-1 ml-4 bg-purple-600 py-4 rounded-lg"
-            >
-              <Text className="text-white text-center font-bold text-lg">Save</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      ) : step < questions.length ? (
-        <View className="flex-1">
-          <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}>
-            <Text className="text-2xl font-bold mb-6 text-center text-white">
-              {typeof current.question === 'function' ? current.question(username) : current.question}
-            </Text>
+          ))}
+        </ScrollView>
 
-            {current.key === 'personal_info' ? (
-              <>
-                <View className="flex-row justify-center gap-4 mb-4">
-                  {['Male', 'Female'].map((option) => (
-                    <TouchableOpacity
-                      key={option}
-                      className={`flex-1 py-4 rounded-lg border ${
-                        formData.sex === option.toLowerCase() ? 'bg-white border-white' : 'bg-gray-600 border-gray-400'
+        <View 
+          className="flex-row justify-between items-center p-4 border-t border-gray-700 bg-gray-900"
+          style={{ paddingBottom: insets.bottom + 16 }}
+        >
+          <TouchableOpacity
+            onPress={goBack}
+            className="w-12 h-12 rounded-full bg-gray-700 justify-center items-center"
+          >
+            <Ionicons name="arrow-back" size={20} color="#fff" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={handleSubmit}
+            className="flex-1 ml-4 bg-blue-400 py-4 rounded-lg justify-center items-center"
+          >
+            <Text className="text-white text-center font-bold text-lg">Save</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    ) : step < questions.length ? (
+      <View className="flex-1">
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}
+        >
+          <Text className="text-2xl font-bold mb-6 text-center text-white">
+            {typeof current.question === 'function'
+              ? current.question(username)
+              : current.question}
+          </Text>
+
+          {current.key === 'personal_info' ? (
+            <>
+              <View className="flex-row justify-center gap-4 mb-4">
+                {['Male', 'Female'].map((option) => (
+                  <TouchableOpacity
+                    key={option}
+                    className={`flex-1 py-4 rounded-lg border ${
+                      formData.sex === option.toLowerCase()
+                        ? 'bg-blue-400 border-blue-400'
+                        : 'bg-gray-800 border-gray-700'
+                    }`}
+                    onPress={() => handleSelect('sex', option)}
+                  >
+                    <Text
+                      className={`text-center font-semibold text-lg ${
+                        formData.sex === option.toLowerCase() ? 'text-white' : 'text-gray-200'
                       }`}
-                      onPress={() => handleSelect('sex', option)}
                     >
-                      <Text className={`text-center font-semibold text-lg ${
-                        formData.sex === option.toLowerCase() ? 'text-black' : 'text-white'
-                      }`}>{option}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-                <TextInput
-                  placeholder="Enter your age"
-                  placeholderTextColor="#ccc"
-                  keyboardType="numeric"
-                  value={formData.age || ''}
-                  onChangeText={(val) => setFormData((prev) => ({ ...prev, age: val }))}
-                  className="border border-gray-400 rounded-lg p-4 text-lg text-white mb-4"
-                />
-                <TextInput
-                  placeholder="How tall are you (cm)?"
-                  placeholderTextColor="#ccc"
-                  keyboardType="numeric"
-                  value={formData.height_cm || ''}
-                  onChangeText={(val) => setFormData((prev) => ({ ...prev, height_cm: val }))}
-                  className="border border-gray-400 rounded-lg p-4 text-lg text-white mb-4"
-                />
-                <TextInput
+                      {option}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <TextInput
+                placeholder="Enter your age"
+                placeholderTextColor="#9CA3AF"
+                keyboardType="numeric"
+                value={formData.age || ''}
+                onChangeText={(val) => setFormData((prev) => ({ ...prev, age: val }))}
+                className="border border-gray-700 rounded-lg p-4 text-lg text-white mb-4 bg-gray-800"
+              />
+              <TextInput
+                placeholder="How tall are you (cm)?"
+                placeholderTextColor="#9CA3AF"
+                keyboardType="numeric"
+                value={formData.height_cm || ''}
+                onChangeText={(val) => setFormData((prev) => ({ ...prev, height_cm: val }))}
+                className="border border-gray-700 rounded-lg p-4 text-lg text-white mb-4 bg-gray-800"
+              />
+              <TextInput
                 placeholder="How much do you weigh (kg)?"
-                placeholderTextColor="#ccc"
+                placeholderTextColor="#9CA3AF"
                 keyboardType="numeric"
                 value={formData.weight_kg || ''}
                 onChangeText={(val) => setFormData((prev) => ({ ...prev, weight_kg: val }))}
-                className="border border-gray-400 rounded-lg p-4 text-lg text-white"
-                />
-
-              </>
-            ) : current.options ? (
-              current.options.map((opt) => (
-                <TouchableOpacity
-                  key={opt.label || opt}
-                  className={`py-4 px-4 rounded-lg mb-3 border ${
-                    formData[current.key] === (opt.label || opt).toLowerCase() ? 'bg-white border-white' : 'bg-gray-600 border-gray-400'
-                  }`}
-                  onPress={() => handleSelect(current.key, opt.label || opt)}
-                >
-                  <Text className={`font-semibold text-lg ${
-                    formData[current.key] === (opt.label || opt).toLowerCase() ? 'text-black' : 'text-white'
-                  }`}>{opt.label || opt}</Text>
-                  {opt.info && (
-                    <Text className="text-sm text-gray-300 mt-1">{opt.info}</Text>
-                  )}
-                </TouchableOpacity>
-              ))
-            ) : current.input ? (
-              <TextInput
-                placeholder={`Enter your ${current.key.replace('_', ' ')}`}
-                placeholderTextColor="#ccc"
-                keyboardType={current.inputType || 'default'}
-                value={inputValue}
-                onChangeText={setInputValue}
-                onBlur={handleInputSubmit}
-                returnKeyType="done"
-                className="border border-gray-400 rounded-lg p-4 text-lg text-white"
+                className="border border-gray-700 rounded-lg p-4 text-lg text-white bg-gray-800"
               />
-            ) : null}
-          </ScrollView>
+            </>
+          ) : current.options ? (
+            current.options.map((opt) => (
+              <TouchableOpacity
+                key={opt.label || opt}
+                className={`py-4 px-4 rounded-lg mb-3 border ${
+                  formData[current.key] === (opt.label || opt).toLowerCase()
+                    ? 'bg-blue-400 border-blue-400'
+                    : 'bg-gray-800 border-gray-700'
+                }`}
+                onPress={() => handleSelect(current.key, opt.label || opt)}
+              >
+                <Text
+                  className={`font-semibold text-lg ${
+                    formData[current.key] === (opt.label || opt).toLowerCase()
+                      ? 'text-white'
+                      : 'text-gray-200'
+                  }`}
+                >
+                  {opt.label || opt}
+                </Text>
+                {opt.info && <Text className="text-sm text-gray-400 mt-1">{opt.info}</Text>}
+              </TouchableOpacity>
+            ))
+          ) : current.input ? (
+            <TextInput
+              placeholder={`Enter your ${current.key.replace('_', ' ')}`}
+              placeholderTextColor="#9CA3AF"
+              keyboardType={current.inputType || 'default'}
+              value={inputValue}
+              onChangeText={setInputValue}
+              onBlur={handleInputSubmit}
+              returnKeyType="done"
+              className="border border-gray-700 rounded-lg p-4 text-lg text-white bg-gray-800"
+            />
+          ) : null}
+        </ScrollView>
 
-          <View className="flex-row justify-between items-center p-4 border-t border-gray-500">
-            <TouchableOpacity
-              onPress={goBack}
-              className="w-12 h-12 rounded-full bg-gray-500 justify-center items-center"
-            >
-              <Ionicons name="arrow-back" size={20} color="white" />
-            </TouchableOpacity>
+        <View 
+          className="flex-row justify-between items-center p-4 border-t border-gray-700 bg-gray-900"
+          style={{ paddingBottom: insets.bottom + 16 }}
+        >
+          <TouchableOpacity
+            onPress={goBack}
+            className="w-12 h-12 rounded-full bg-gray-700 justify-center items-center"
+          >
+            <Ionicons name="arrow-back" size={20} color="#fff" />
+          </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={goNext}
-              className="flex-1 ml-4 bg-purple-600 py-4 rounded-lg"
-            >
-              <Text className="text-white text-center font-bold text-lg">
-                {step === questions.length - 1 ? 'Finish' : 'Next'}
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            onPress={goNext}
+            className="flex-1 ml-4 bg-blue-400 py-4 rounded-lg justify-center items-center"
+          >
+            <Text className="text-white text-center font-bold text-lg">
+              {step === questions.length - 1 ? 'Finish' : 'Next'}
+            </Text>
+          </TouchableOpacity>
         </View>
-      ) : null}
-    </KeyboardAvoidingView>
-  );
+      </View>
+    ) : null}
+  </KeyboardAvoidingView>
+);
 }

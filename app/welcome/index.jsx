@@ -11,11 +11,11 @@ export default function WelcomeScreen() {
         SwiftPass
       </Text>
       <Text className="text-lg text-white mb-16 text-center font-medium">
-        The Perfect Fitness App
+        Fitness App
       </Text>
       <TouchableOpacity
         onPress={() => router.push("/login")}
-        className="bg-blue-300 w-full rounded-2xl py-5 shadow-lg"
+        className="bg-blue-500 w-full rounded-2xl py-5 shadow-lg"
         activeOpacity={0.85}
       >
         <Text className="text-center text-white text-xl font-semibold tracking-wide">
