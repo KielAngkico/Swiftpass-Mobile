@@ -57,9 +57,7 @@ exerciseData = rows.map(row => ({
   sub_target: row.sub_target,
   equipment: row.equipment,
   instructions: row.instructions,
-  image_url: row.image_url
-    ? `${process.env.EXPO_PUBLIC_MEDIA_URL}${row.image_url.startsWith('/') ? '' : '/'}${row.image_url}`
-    : null,
+image_url: row.image_url || null
 }));
         }
 
