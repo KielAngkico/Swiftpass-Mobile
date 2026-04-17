@@ -34,19 +34,33 @@ router.get("/splits", async (req, res) => {
         if (exerciseIds.length > 0) {
           const placeholders = exerciseIds.map(() => '?').join(', ');
           const query = `
-            SELECT id, name, muscle_group, equipment, instructions
-            FROM ExerciseLibrary
+SELECT 
+  id,
+  name,
+  level,
+  muscle_group,
+  exercise_type,
+  sub_target,
+  equipment,
+  instructions,
+  image_url            FROM ExerciseLibrary
             WHERE id IN (${placeholders})
           `;
           const [rows] = await db.pool.execute(query, exerciseIds);
 
-          exerciseData = rows.map(row => ({
-            id: row.id,
-            exercise_name: row.name,
-            muscle_group: row.muscle_group,
-            equipment: row.equipment,
-            instructions: row.instructions,
-          }));
+exerciseData = rows.map(row => ({
+  id: row.id,
+  exercise_name: row.name,
+  level: row.level,
+  muscle_group: row.muscle_group,
+  exercise_type: row.exercise_type,
+  sub_target: row.sub_target,
+  equipment: row.equipment,
+  instructions: row.instructions,
+  image_url: row.image_url
+    ? `${process.env.EXPO_PUBLIC_MEDIA_URL}${row.image_url.startsWith('/') ? '' : '/'}${row.image_url}`
+    : null,
+}));
         }
 
         return {
@@ -124,7 +138,16 @@ router.get("/splits/details", async (req, res) => {
         if (exerciseIds.length > 0) {
           const placeholders = exerciseIds.map(() => '?').join(', ');
           const [exerciseRows] = await db.pool.execute(
-            `SELECT id, name, muscle_group, equipment, instructions
+            `SELECT 
+  id,
+  name,
+  level,
+  muscle_group,
+  exercise_type,
+  sub_target,
+  equipment,
+  instructions,
+  image_url
              FROM ExerciseLibrary
              WHERE id IN (${placeholders})`,
             exerciseIds
@@ -138,15 +161,21 @@ router.get("/splits/details", async (req, res) => {
           );
           const repsRange = repRanges[0] || { reps_low: null, reps_high: null };
 
-          exercises = exerciseRows.map(e => ({
-            id: e.id,
-            exercise_name: e.name,
-            muscle_group: e.muscle_group,
-            equipment: e.equipment,
-            instructions: e.instructions,
-            reps_low: repsRange.reps_low,
-            reps_high: repsRange.reps_high,
-          }));
+exercises = exerciseRows.map(e => ({
+  id: e.id,
+  exercise_name: e.name,
+  level: e.level,
+  muscle_group: e.muscle_group,
+  exercise_type: e.exercise_type,
+  sub_target: e.sub_target,
+  equipment: e.equipment,
+  instructions: e.instructions,
+  image_url: e.image_url
+    ? `${process.env.EXPO_PUBLIC_MEDIA_URL}${e.image_url.startsWith('/') ? '' : '/'}${e.image_url}`
+    : null,
+  reps_low: repsRange.reps_low,
+  reps_high: repsRange.reps_high,
+}));
         }
 
         return {
