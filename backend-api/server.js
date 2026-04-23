@@ -10,14 +10,16 @@ const profileRoutes = require('./routes/profile');
 const transactionRoutes = require('./routes/transactions');
 const ActivityHistoryRoutes = require('./routes/ActivityHistory');
 
+
 const InitialAssessementRoutes = require('./routes/InitialAssessment');
+const resultRoute = require("./routes/ResultRoutes");
+
 const SecondaryAssessementRoutes = require('./routes/SecondaryAssessment');
 const assessmentRoute = require("./routes/exerciseAssessmentRoute"); 
 const exercisePlanResultRoute = require('./routes/ExercisePlanResult');
 const NutritionPlanResultRoute = require('./routes/NutritionPlanResult');
 
 const exerciseSessionLogRoute = require("./routes/ExerciseSessionLog");
-const resultRoute = require("./routes/ResultRoutes");
 
 const GymActivityRoute = require('./routes/gymActivity');
 

@@ -46,7 +46,19 @@ router.get("/assessment/:rfid_tag", async (req, res) => {
           `SELECT * FROM ExerciseLibrary WHERE id IN (${placeholders})`,
           exerciseIds
         );
-        exercises = exRows;
+        exercises = exRows.map(e => ({
+  id: e.id,
+  name: e.name,
+  level: e.level,
+  muscle_group: e.muscle_group,
+  exercise_type: e.exercise_type,
+  sub_target: e.sub_target,
+  equipment: e.equipment,
+  instructions: e.instructions,
+  image_url: e.image_url
+    ? `${process.env.EXPO_PUBLIC_MEDIA_URL}/${e.image_url.replace(/^\//, "")}`
+    : null,
+}));
         console.log(`📦 Exercises fetched for day ${day.day_number}:`, exercises.length);
       }
 

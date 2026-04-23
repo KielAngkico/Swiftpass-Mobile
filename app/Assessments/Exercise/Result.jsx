@@ -117,7 +117,7 @@ export default function ExerciseResult() {
       try {
         const res = await API.get(`/results-routes/${rfidTag}`);
         const data = res.data;
-
+       console.log("🔍 Full API response:", JSON.stringify(data, null, 2));
         setWorkoutPlan(data.workoutPlan || {});
         const splits = Object.keys(data.workoutPlan || {});
         setAvailableSplits(splits);

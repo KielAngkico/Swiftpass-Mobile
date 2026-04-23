@@ -1116,19 +1116,20 @@ router.get("/results-routes/:rfid_tag", async (req, res) => {
 
     for (const day of daysRows) {
       const exercisesResult = await db.query(
-        `SELECT 
-           e.id,
-           e.name,
-           e.muscle_group,
-           e.equipment,
-           e.instructions,
-           e.level,
-           e.exercise_type,
-           sde.order_index
-         FROM SplitDayExercises sde
-         JOIN ExerciseLibrary e ON sde.exercise_id = e.id
-         WHERE sde.split_day_id = ?
-         ORDER BY sde.order_index ASC`,
+`SELECT 
+   e.id,
+   e.name,
+   e.muscle_group,
+   e.equipment,
+   e.instructions,
+   e.level,
+   e.exercise_type,
+   e.image_url,
+   sde.order_index
+ FROM SplitDayExercises sde
+ JOIN ExerciseLibrary e ON sde.exercise_id = e.id
+ WHERE sde.split_day_id = ?
+ ORDER BY sde.order_index ASC`,
         [day.day_id]
       );
 
@@ -1141,7 +1142,19 @@ router.get("/results-routes/:rfid_tag", async (req, res) => {
         exercisesRows = [];
       }
 
-      workoutPlan[day.day_title] = exercisesRows || [];
+      workoutPlan[day.day_title] = (exercisesRows || []).map(e => ({
+  id: e.id,
+  name: e.name,
+  muscle_group: e.muscle_group,
+  equipment: e.equipment,
+  instructions: e.instructions,
+  level: e.level,
+  exercise_type: e.exercise_type,
+  order_index: e.order_index,
+  image_url: e.image_url
+    ? `${process.env.EXPO_PUBLIC_MEDIA_URL}/${e.image_url.replace(/^\//, "")}`
+    : null,
+}));
     }
 
     res.json({

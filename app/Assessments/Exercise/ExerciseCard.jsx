@@ -2,10 +2,11 @@ import React from "react";
 import { Modal, View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { Image } from "expo-image";
 import { getFullPhotoUrl } from "../../../backend-api/services/Exercise_host";
-
 export default function ExerciseCard({ visible, exercise, onClose }) {
   if (!exercise) return null;
-
+  console.log("Full exercise:", JSON.stringify(exercise, null, 2));
+  console.log("Raw image_url:", exercise.image_url);
+  console.log("Built URL:", getFullPhotoUrl(exercise.image_url));
   return (
     <Modal visible={visible} animationType="fade" transparent>
       <View className="flex-1 bg-black/80 justify-center px-4">
@@ -28,7 +29,7 @@ export default function ExerciseCard({ visible, exercise, onClose }) {
             {exercise.image_url && (
               <View className="px-6 pt-4">
                 <Image
-                  source={{ uri: getFullPhotoUrl(exercise.image_url, "exercises") }}
+                  source={{ uri: getFullPhotoUrl(exercise.image_url) }}
                   style={{ 
                     width: '100%', 
                     height: 240, 

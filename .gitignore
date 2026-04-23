@@ -40,3 +40,6 @@ app-example
 
 .env
 .env.*
+
+# uploaded files (server/runtime only)
+public/uploads/
