@@ -12,17 +12,18 @@ router.get('/activity-history', async (req, res) => {
   }
 
   try {
-    const [rows] = await pool.query(
-      `SELECT 
-         id,
-         full_name,
-         entry_time,
-         admin_id
-       FROM AdminEntryLogs
-       WHERE rfid_tag = ?
-       ORDER BY entry_time DESC`,
-      [rfid_tag]
-    );
+const [rows] = await pool.query(
+  `SELECT 
+     id,
+     full_name,
+     entry_time,
+     exit_time,
+     admin_id
+   FROM AdminEntryLogs
+   WHERE rfid_tag = ?
+   ORDER BY entry_time DESC`,
+  [rfid_tag]
+);
 
     console.log(`✅ Fetched ${rows.length} entry logs for RFID: ${rfid_tag}`);
 
@@ -40,14 +41,15 @@ router.get('/activity-history', async (req, res) => {
         gym_name: gymName,
       });
 
-      return {
-        id: entry.id,
-        full_name: entry.full_name,
-        label: `Visited ${gymName} Gym`,
-        timestamp: new Date(entry.entry_time).toISOString(),
-        type: 'entry',
-        admin_id: entry.admin_id,
-      };
+return {
+  id: entry.id,
+  full_name: entry.full_name,
+  label: `Visited ${gymName} Gym`,
+  timestamp: new Date(entry.entry_time).toISOString(),
+  exit_time: entry.exit_time ? new Date(entry.exit_time).toISOString() : null, // 👈 add this
+  type: 'entry',
+  admin_id: entry.admin_id,
+};
     }));
 
     return res.json({ activities: enrichedRows });
