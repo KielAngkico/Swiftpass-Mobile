@@ -2,6 +2,27 @@ const express = require("express");
 const router = express.Router();
 const db = require("../db");
 
+router.get("/exercises", async (req, res) => {
+  const { category } = req.query;
+  try {
+    let query = `SELECT id, name, muscle_group, equipment, instructions, level, exercise_type, image_url, category FROM ExerciseLibrary`;
+    const params = [];
+
+    if (category) {
+      query += ` WHERE LOWER(category) = ?`;
+      params.push(category.toLowerCase());
+    }
+
+    query += ` ORDER BY name ASC`;
+
+    const [rows] = await db.pool.execute(query, params);
+    res.json(Array.isArray(rows) ? rows : []);
+  } catch (error) {
+    console.error("Error fetching exercises:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 router.get("/splits", async (req, res) => {
   try {
     const { workout_days } = req.query;

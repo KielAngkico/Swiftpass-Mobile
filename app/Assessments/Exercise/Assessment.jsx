@@ -33,7 +33,7 @@ const steps = [
   {
     key: "cardio",
     question: "Do you like to include cardio?",
-    options: ["Yes", "No", "Sometimes"],
+    options: ["Yes", "No"],
   },
   {
     key: "workout_days",
@@ -161,7 +161,7 @@ const saveAssessment = async () => {
       workout_days: Number(answers.workout_days) || null,
       assigned_split_name: answers.split_choice || null,
       coach_notes: null,
-      admin_id: null,
+      cardio_preference: answers.cardio ?? "No",
     };
 
     if (!exerciseData.member_id || !exerciseData.rfid_tag) {

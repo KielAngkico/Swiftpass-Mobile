@@ -26,6 +26,9 @@ const GymActivityRoute = require('./routes/gymActivity');
 const exerciseRoutes = require('./routes/Exercises');
 const exerciseLogsRoute = require('./routes/ExercisesLogs');
 
+const cardioLogRoutes = require("./routes/cardioLog");
+
+
 
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
@@ -63,6 +66,8 @@ app.use("/api/results-routes", resultRoute);
 app.use("/api", GymActivityRoute);
 app.use('/api', exerciseRoutes);
 app.use("/api", exerciseLogsRoute);
+
+app.use("/api", cardioLogRoutes);
 
 
 console.log('Starting server...');

@@ -59,6 +59,7 @@ export default function ExerciseResult() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
+  const [cardioPreference, setCardioPreference] = useState("No");
 
   const params = useLocalSearchParams();
 
@@ -117,6 +118,9 @@ export default function ExerciseResult() {
       try {
         const res = await API.get(`/results-routes/${rfidTag}`);
         const data = res.data;
+        setWorkoutPlan(data.workoutPlan || {});
+setAvailableSplits(Object.keys(data.workoutPlan || {}));
+setCardioPreference(data.assessment?.cardio_preference ?? "No"); // add this
        console.log("🔍 Full API response:", JSON.stringify(data, null, 2));
         setWorkoutPlan(data.workoutPlan || {});
         const splits = Object.keys(data.workoutPlan || {});
@@ -156,7 +160,7 @@ export default function ExerciseResult() {
 
       Alert.alert(
         "Workout Complete!",
-        "Great job completing today's workout! 💪"
+        "Great job completing today's workout! "
       );
     } catch (err) {
       Alert.alert("Error", err.message || "Failed to mark workout as complete");
@@ -246,6 +250,8 @@ export default function ExerciseResult() {
           markWorkoutComplete={markWorkoutComplete}
           openExerciseModal={openExerciseModal}
           mondayDate={mondayDate}
+          rfid={rfidTag}
+          cardioPreference={cardioPreference}
         />
       )}
 
