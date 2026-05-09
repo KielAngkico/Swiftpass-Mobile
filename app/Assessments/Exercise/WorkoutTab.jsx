@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, Image } from "react-native";
+import { View, Text, TouchableOpacity, Image, Modal, ScrollView } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import API from "../../../backend-api/services/api";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { getFullPhotoUrl } from "../../../backend-api/services/Exercise_host";
@@ -92,9 +94,73 @@ export default function WorkoutTab({
   dateKey,
   markWorkoutComplete,
   openExerciseModal,
-  mondayDate
+  mondayDate,
+  rfid,
 }) {
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+  const [cardioPreference, setCardioPreference] = useState(null);
+const [cardioLog, setCardioLog] = useState({});
+const [cardioModalVisible, setCardioModalVisible] = useState(false);
+const [cardioExercises, setCardioExercises] = useState([]);
+const [loadingCardio, setLoadingCardio] = useState(false);
+
+useEffect(() => {
+  if (!rfid) return;
+  const fetchCardioPreference = async () => {
+    try {
+const res = await API.get(`/results-routes/${rfid}`);
+setCardioPreference(res.data?.assessment?.cardio_preference ?? "No");
+    } catch (err) {
+      console.error("Error fetching cardio preference:", err);
+    }
+  };
+  fetchCardioPreference();
+}, [rfid]);
+
+useEffect(() => {
+  if (!rfid || cardioPreference === "No" || cardioPreference === null) return;
+  const fetchCardioLog = async () => {
+    try {
+      const res = await API.get(`/cardio-log/${rfid}?date=${dateKey}`);
+      if (res.data) {
+        setCardioLog((prev) => ({ ...prev, [dateKey]: res.data }));
+      }
+    } catch (err) {
+      console.error("Error fetching cardio log:", err);
+    }
+  };
+  fetchCardioLog();
+}, [rfid, dateKey, cardioPreference]);
+
+const openCardioModal = async () => {
+  try {
+    setLoadingCardio(true);
+    setCardioModalVisible(true);
+    const res = await API.get(`/exercises?category=cardio`);
+    setCardioExercises(res.data?.data || res.data || []);
+  } catch (err) {
+    console.error("Error fetching cardio exercises:", err);
+  } finally {
+    setLoadingCardio(false);
+  }
+};
+
+const pickCardio = async (exercise) => {
+  try {
+    await API.post(`/cardio-log`, {
+      rfid_tag: rfid,
+      log_date: dateKey,
+      cardio_exercise_id: exercise.id,
+    });
+    setCardioLog((prev) => ({
+      ...prev,
+      [dateKey]: { cardio_exercise_id: exercise.id, name: exercise.name, image_url: exercise.image_url },
+    }));
+    setCardioModalVisible(false);
+  } catch (err) {
+    console.error("Error saving cardio pick:", err);
+  }
+};
 
   const displayedDate = formatDateLabel(currentDate);
   const hasCompletedWorkoutToday = Boolean(completedDays[dateKey]);
@@ -207,6 +273,93 @@ export default function WorkoutTab({
         </View>
       ) : (
         <>
+        {(cardioPreference === "Yes" || cardioPreference === "Sometimes") && (
+            <View className="bg-gray-800 rounded-2xl p-4 mb-4 shadow-xl">
+              <Text className="text-white font-bold text-base mb-3">Cardio of the Day</Text>
+              {cardioLog[dateKey] ? (
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-row items-center flex-1">
+                    <Image
+                      source={{ uri: getFullPhotoUrl(cardioLog[dateKey].image_url) }}
+                      style={{ width: 56, height: 56, borderRadius: 8, backgroundColor: "#4B5563" }}
+                      resizeMode="cover"
+                    />
+                    <Text className="text-white font-semibold ml-3 flex-1">{cardioLog[dateKey].name}</Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={openCardioModal}
+                    className="bg-gray-700 px-3 py-2 rounded-lg ml-2"
+                  >
+                    <Text className="text-blue-400 text-sm font-semibold">Change</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  onPress={openCardioModal}
+                  className="bg-gray-700 py-3 rounded-xl items-center"
+                >
+                  <Text className="text-blue-400 font-semibold">+ Pick your cardio for today</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+
+<Modal visible={cardioModalVisible} transparent animationType="fade">
+  <View className="flex-1 justify-center items-center px-5" style={{ backgroundColor: "rgba(0,0,0,0.7)" }}>
+    <View className="bg-gray-800 rounded-2xl w-full overflow-hidden" style={{ maxHeight: "75%" }}>
+
+      {/* Header */}
+      <View className="flex-row justify-between items-center p-5 border-b border-gray-700">
+        <View>
+          <Text className="text-white text-lg font-bold">Pick Cardio</Text>
+          <Text className="text-gray-400 text-xs mt-0.5">Choose your cardio for today</Text>
+        </View>
+        <TouchableOpacity
+          onPress={() => setCardioModalVisible(false)}
+          className="bg-gray-700 rounded-full w-9 h-9 items-center justify-center"
+        >
+          <Ionicons name="close" size={20} color="#fff" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Body */}
+      {loadingCardio ? (
+        <View className="items-center py-10">
+          <Text className="text-gray-400">Loading cardio exercises...</Text>
+        </View>
+      ) : (
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16 }}>
+          {cardioExercises.map((exercise) => (
+            <TouchableOpacity
+              key={exercise.id}
+              onPress={() => pickCardio(exercise)}
+              className="flex-row items-center bg-gray-900 rounded-2xl p-3 mb-3 border border-gray-700"
+            >
+              <Image
+                source={{ uri: getFullPhotoUrl(exercise.image_url) }}
+                style={{ width: 60, height: 60, borderRadius: 10, backgroundColor: "#4B5563" }}
+                resizeMode="cover"
+              />
+              <View className="ml-3 flex-1">
+                <Text className="text-white font-semibold text-base">{exercise.name}</Text>
+                {exercise.muscle_group && (
+                  <Text className="text-blue-400 text-sm capitalize mt-0.5">{exercise.muscle_group}</Text>
+                )}
+                {exercise.equipment && (
+                  <Text className="text-gray-500 text-xs mt-0.5">{exercise.equipment}</Text>
+                )}
+              </View>
+              <View className="bg-blue-600 rounded-lg px-3 py-1.5">
+                <Text className="text-white text-xs font-semibold">Select</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
+
+    </View>
+  </View>
+</Modal>
           {/* Exercise List */}
           <View className="bg-gray-800 rounded-2xl p-6 shadow-xl">
             <View className="flex-row justify-between items-center mb-4">
@@ -328,7 +481,7 @@ export default function WorkoutTab({
               disabled={hasCompletedWorkoutToday}
             >
               <Text className="text-white font-bold text-lg">
-                {hasCompletedWorkoutToday ? "WORKOUT COMPLETED ✓" : "MARK WORKOUT AS COMPLETE"}
+                {hasCompletedWorkoutToday ? "WORKOUT COMPLETED" : "MARK WORKOUT AS COMPLETE"}
               </Text>
               {!hasCompletedWorkoutToday && (
                 <Text className="text-blue-100 text-sm mt-1">

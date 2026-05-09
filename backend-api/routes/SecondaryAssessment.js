@@ -10,7 +10,6 @@ router.get("/exercise-assessment-status/:member_id", async (req, res) => {
       [member_id]
     );
 
-
     const assessmentExists = (Array.isArray(rows) && rows.length > 0) || (!!rows && rows.id);
 
     console.log("🧪 ExerciseAssessment rows:", rows);
@@ -67,8 +66,6 @@ router.get('/assessment/initial/:member_id', async (req, res) => {
 });
 
 
-
-
 router.get("/food-groups", async (req, res) => {
   try {
     const rows = await db.query(
@@ -76,36 +73,35 @@ router.get("/food-groups", async (req, res) => {
     );
     res.json(rows);
   } catch (error) {
-    console.error("❌ Error fetching food groups:", error);
+    console.error("Error fetching food groups:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
 router.get('/food-library/best-specific/:food_group_id', async (req, res) => {
   const foodGroupId = parseInt(req.params.food_group_id, 10);
-  console.log(`🔍 Looking for best food for group ID: ${foodGroupId}`);
+  console.log(`Looking for best food for group ID: ${foodGroupId}`);
   
   if (isNaN(foodGroupId)) {
     return res.status(400).json({ error: 'Invalid food group ID' });
   }
 
   try {
-
     const [fgRows] = await db.query(
       'SELECT id, name, category FROM FoodGroups WHERE id = ? LIMIT 1',
       [foodGroupId]
     );
     
-    console.log(`📋 Food group query result for ID ${foodGroupId}:`, fgRows);
+    console.log(`Food group query result for ID ${foodGroupId}:`, fgRows);
     
     const foodGroup = Array.isArray(fgRows) ? fgRows[0] : fgRows;
     
     if (!foodGroup || !foodGroup.id) {
-      console.log(`❌ Food group ${foodGroupId} not found`);
+      console.log(`Food group ${foodGroupId} not found`);
       return res.status(404).json({ error: 'Food group not found' });
     }
 
-    console.log(`✅ Found food group:`, foodGroup);
+    console.log(`Found food group:`, foodGroup);
     const category = foodGroup.category.toLowerCase();
 
     let orderBy = '';
@@ -119,25 +115,21 @@ router.get('/food-library/best-specific/:food_group_id', async (req, res) => {
       orderBy = 'protein DESC';
     }
 
-    console.log(`🔄 Using order by: ${orderBy} for category: ${category}`);
-
-
     const [foodRows] = await db.query(
       `SELECT * FROM FoodLibrary WHERE group_id = ? ORDER BY ${orderBy} LIMIT 2`,
       [foodGroupId]
     );
 
-    console.log(`🍎 Food library query result for group ${foodGroupId}:`, foodRows);
+    console.log(`Food library query result for group ${foodGroupId}:`, foodRows);
 
     const foods = Array.isArray(foodRows) ? foodRows : [foodRows];
     
     if (foods.length > 0 && foods[0] && foods[0].id) {
-      console.log(`✅ Returning foods:`, foods);
+      console.log(`Returning foods:`, foods);
       return res.json(foods);
     }
 
-
-    console.log(`⚠️ No foods found for group ${foodGroupId}, returning fallback`);
+    console.log(`No foods found for group ${foodGroupId}, returning fallback`);
     return res.json([
       {
         id: `${foodGroupId}_default`,
@@ -146,14 +138,14 @@ router.get('/food-library/best-specific/:food_group_id', async (req, res) => {
       }
     ]);
   } catch (err) {
-    console.error(`❌ Error fetching best specific food for group ${foodGroupId}:`, err);
+    console.error(`Error fetching best specific food for group ${foodGroupId}:`, err);
     return res.status(500).json({ error: 'Server error' });
   }
 });
 
 router.get("/food-library/group/:food_group_id", async (req, res) => {
   const foodGroupId = parseInt(req.params.food_group_id, 10);
-  console.log(`🔍 Fetching all foods for group ID: ${foodGroupId}`);
+  console.log(`Fetching all foods for group ID: ${foodGroupId}`);
 
   if (isNaN(foodGroupId)) {
     return res.status(400).json({ error: "Invalid food group ID" });
@@ -177,16 +169,16 @@ router.get("/food-library/group/:food_group_id", async (req, res) => {
 
     const foodRows = Array.isArray(result) ? result : [result];
 
-    console.log(`🍽️ Final query result for group ${foodGroupId}:`, foodRows);
+    console.log(`Final query result for group ${foodGroupId}:`, foodRows);
 
     if (foodRows.length > 0 && foodRows[0]?.id) {
       return res.json(foodRows);
     }
 
-    console.log(`⚠️ No foods found for group ${foodGroupId}`);
+    console.log(`No foods found for group ${foodGroupId}`);
     return res.json([]);
   } catch (err) {
-    console.error(`❌ Error fetching foods for group ${foodGroupId}:`, err);
+    console.error(`Error fetching foods for group ${foodGroupId}:`, err);
     return res.status(500).json({ error: "Server error" });
   }
 });
@@ -196,11 +188,10 @@ router.get("/allergens", async (req, res) => {
     const rows = await db.query("SELECT * FROM Allergens ORDER BY name ASC");
     res.json(rows);
   } catch (err) {
-    console.error("❌ Error fetching allergens:", err);
+    console.error("Error fetching allergens:", err);
     res.status(500).json({ error: "Failed to fetch allergens" });
   }
 });
-
 
 
 router.get('/macro-breakdown/:goal_type', async (req, res) => {
@@ -218,7 +209,7 @@ router.get('/macro-breakdown/:goal_type', async (req, res) => {
 
     const rows = result[0]; 
 
-    console.log("🔍 Query result for goal_type:", `"${goal_type}"`, rows);
+    console.log("Query result for goal_type:", `"${goal_type}"`, rows);
 
     if (rows && rows.id) {
       res.json({
@@ -228,15 +219,14 @@ router.get('/macro-breakdown/:goal_type', async (req, res) => {
         fats_pct: parseFloat(rows.fats_pct),
       });
     } else {
-      console.warn("⚠️ No macro breakdown found for:", `"${goal_type}"`);
+      console.warn("No macro breakdown found for:", `"${goal_type}"`);
       res.status(404).json({ error: 'Macro breakdown not found' });
     }
   } catch (error) {
-    console.error('❌ Error fetching macro breakdown:', error);
+    console.error('Error fetching macro breakdown:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
-
 
 
 router.post('/nutrition/:member_id', async (req, res) => {
@@ -258,14 +248,12 @@ router.post('/nutrition/:member_id', async (req, res) => {
     if (!macro_breakdown_id) 
       return res.status(400).json({ error: "macro_breakdown_id is required" });
 
- 
     let parsedAllergens = [];
     if (Array.isArray(allergens)) parsedAllergens = allergens;
     else if (typeof allergens === "string") {
       try { parsedAllergens = JSON.parse(allergens); } 
       catch { parsedAllergens = [allergens]; }
     }
-
 
     const selectedFoodIds = [];
     const foodIdsByMacro = {
@@ -331,7 +319,6 @@ router.post('/nutrition/:member_id', async (req, res) => {
 
     assessmentId = Array.isArray(insertResult) ? insertResult[0].insertId : insertResult.insertId;
 
-  
     if (selectedFoodIds.length === 0) {
       console.log("No foods selected by user");
       return res.json({ 
@@ -465,7 +452,6 @@ router.post('/nutrition/:member_id', async (req, res) => {
     console.log("Executing query with selected food IDs:", selectedFoodIds);
     console.log("Query parameters:", queryParams);
 
-  
     const queryResult = await db.query(updatedQuery, queryParams);
 
     console.log("Raw query result:", queryResult);
@@ -490,20 +476,6 @@ router.post('/nutrition/:member_id', async (req, res) => {
     await db.query(`DELETE FROM MemberNutritionResult WHERE assessment_id = ?`, [assessmentId]);
 
     const insertPromises = scaledResults.map(f => {
-      console.log("Inserting food:", f.food_name, "with values:", {
-        assessment_id: assessmentId,
-        member_id: member_id,
-        food_id: f.food_id,
-        group_id: f.group_id,
-        portion_grams: f.portion_grams,
-        calories: f.total_calories,
-        protein: f.total_protein,
-        carbs: f.total_carbs,
-        fats: f.total_fats,
-        food_name: f.food_name,
-        macro_type: f.food_category
-      });
-      
       return db.query(
         `INSERT INTO MemberNutritionResult 
           (assessment_id, member_id, food_id, group_id, portion_grams, calories, protein, carbs, fats, food_name, macro_type)
@@ -537,7 +509,7 @@ router.post('/nutrition/:member_id', async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Error saving nutrition assessment:", error);
+    console.error("Error saving nutrition assessment:", error);
     if (assessmentId) {
       try {
         await db.query(`DELETE FROM NutritionAssessment WHERE id = ?`, [assessmentId]);
@@ -729,6 +701,7 @@ router.post('/nutrition-result/generate/:assessment_id', async (req, res) => {
     if (!scaledResults || !Array.isArray(scaledResults) || scaledResults.length === 0) {
       return res.status(404).json({ error: "No results generated" });
     }
+
     await db.query(`DELETE FROM MemberNutritionResult WHERE assessment_id = ?`, [assessment_id]);
 
     const insertPromises = scaledResults.map(food => {
@@ -751,7 +724,7 @@ router.post('/nutrition-result/generate/:assessment_id', async (req, res) => {
     });
 
   } catch (error) {
-    console.error(`❌ Error generating CTE nutrition results:`, error);
+    console.error(`Error generating CTE nutrition results:`, error);
     res.status(500).json({ error: "Internal server error", details: error.message });
   }
 });
@@ -785,7 +758,7 @@ router.get('/nutrition-result/:assessment_id', async (req, res) => {
     res.json(summary);
 
   } catch (error) {
-    console.error(`❌ Error fetching nutrition results:`, error);
+    console.error(`Error fetching nutrition results:`, error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -816,7 +789,7 @@ router.get("/splits/days/:days", async (req, res) => {
 
     res.json(Array.isArray(rows) ? rows : []);
   } catch (error) {
-    console.error("❌ Error fetching splits by days:", error);
+    console.error("Error fetching splits by days:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -917,7 +890,7 @@ router.get("/exercise-plan/preview", async (req, res) => {
     res.json(response);
 
   } catch (error) {
-    console.error("❌ Error fetching exercise preview:", error);
+    console.error("Error fetching exercise preview:", error);
     res.status(500).json({ error: "Internal server error", details: error.message });
   }
 });
@@ -931,6 +904,7 @@ router.post('/exercise/:member_id', async (req, res) => {
     workout_days, 
     assigned_split_name, 
     coach_notes,
+    cardio_preference,
     status = 'confirmed'
   } = req.body;
 
@@ -942,7 +916,6 @@ router.post('/exercise/:member_id', async (req, res) => {
   }
 
   try {
-
     const memberResult = await db.query(
       "SELECT id FROM MembersAccounts WHERE id = ? AND rfid_tag = ?",
       [member_id, rfid_tag]
@@ -983,17 +956,15 @@ router.post('/exercise/:member_id', async (req, res) => {
       return res.status(404).json({ error: "Selected split plan not found" });
     }
 
- 
     await db.query(
       "DELETE FROM ExerciseAssessments WHERE member_id = ?",
       [member_id]
     );
 
-
     const insertResult = await db.query(
       `INSERT INTO ExerciseAssessments
-       (member_id, rfid_tag, admin_id, fitness_level, workout_days, assigned_split_name, coach_notes, status, completed_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+       (member_id, rfid_tag, admin_id, fitness_level, workout_days, assigned_split_name, coach_notes, cardio_preference, status, completed_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
       [
         parseInt(member_id), 
         rfid_tag, 
@@ -1002,6 +973,7 @@ router.post('/exercise/:member_id', async (req, res) => {
         parseInt(workout_days), 
         assigned_split_name, 
         coach_notes || null,
+        cardio_preference || "No",
         status
       ]
     );
@@ -1024,12 +996,13 @@ router.post('/exercise/:member_id', async (req, res) => {
         split_name: assigned_split_name,
         workout_days: parseInt(workout_days),
         fitness_level: fitness_level.toLowerCase(),
+        cardio_preference: cardio_preference || "No",
         status: status
       }
     });
 
   } catch (error) {
-    console.error('❌ Error saving exercise assessment:', error);
+    console.error('Error saving exercise assessment:', error);
     res.status(500).json({ 
       error: "Internal server error", 
       details: error.message 
@@ -1042,7 +1015,6 @@ router.get("/results-routes/:rfid_tag", async (req, res) => {
   const { rfid_tag } = req.params;
 
   try {
-
     const assessmentResult = await db.query(
       `SELECT 
          ea.id,
@@ -1051,6 +1023,7 @@ router.get("/results-routes/:rfid_tag", async (req, res) => {
          ea.workout_days,
          ea.assigned_split_name,
          ea.coach_notes,
+         ea.cardio_preference,
          ea.status,
          ea.completed_at
        FROM ExerciseAssessments ea
@@ -1116,20 +1089,20 @@ router.get("/results-routes/:rfid_tag", async (req, res) => {
 
     for (const day of daysRows) {
       const exercisesResult = await db.query(
-`SELECT 
-   e.id,
-   e.name,
-   e.muscle_group,
-   e.equipment,
-   e.instructions,
-   e.level,
-   e.exercise_type,
-   e.image_url,
-   sde.order_index
- FROM SplitDayExercises sde
- JOIN ExerciseLibrary e ON sde.exercise_id = e.id
- WHERE sde.split_day_id = ?
- ORDER BY sde.order_index ASC`,
+        `SELECT 
+           e.id,
+           e.name,
+           e.muscle_group,
+           e.equipment,
+           e.instructions,
+           e.level,
+           e.exercise_type,
+           e.image_url,
+           sde.order_index
+         FROM SplitDayExercises sde
+         JOIN ExerciseLibrary e ON sde.exercise_id = e.id
+         WHERE sde.split_day_id = ?
+         ORDER BY sde.order_index ASC`,
         [day.day_id]
       );
 
@@ -1143,18 +1116,18 @@ router.get("/results-routes/:rfid_tag", async (req, res) => {
       }
 
       workoutPlan[day.day_title] = (exercisesRows || []).map(e => ({
-  id: e.id,
-  name: e.name,
-  muscle_group: e.muscle_group,
-  equipment: e.equipment,
-  instructions: e.instructions,
-  level: e.level,
-  exercise_type: e.exercise_type,
-  order_index: e.order_index,
-  image_url: e.image_url
-    ? `${process.env.EXPO_PUBLIC_MEDIA_URL}/${e.image_url.replace(/^\//, "")}`
-    : null,
-}));
+        id: e.id,
+        name: e.name,
+        muscle_group: e.muscle_group,
+        equipment: e.equipment,
+        instructions: e.instructions,
+        level: e.level,
+        exercise_type: e.exercise_type,
+        order_index: e.order_index,
+        image_url: e.image_url
+          ? `${process.env.EXPO_PUBLIC_MEDIA_URL}/${e.image_url.replace(/^\//, "")}`
+          : null,
+      }));
     }
 
     res.json({
@@ -1165,6 +1138,7 @@ router.get("/results-routes/:rfid_tag", async (req, res) => {
         workout_days: assessment.workout_days,
         assigned_split_name: assessment.assigned_split_name,
         coach_notes: assessment.coach_notes,
+        cardio_preference: assessment.cardio_preference,
         status: assessment.status,
         completed_at: assessment.completed_at
       },
@@ -1172,7 +1146,7 @@ router.get("/results-routes/:rfid_tag", async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Error fetching workout plan:", error);
+    console.error("Error fetching workout plan:", error);
     res.status(500).json({ error: "Internal server error", details: error.message });
   }
 });
@@ -1200,7 +1174,6 @@ router.get("/exercise-completed-days/:rfid_tag", async (req, res) => {
       completedRows = [];
     }
 
-
     const completedDays = {};
     completedRows.forEach(row => {
       const dateKey = row.completion_date.toISOString().split('T')[0];
@@ -1210,7 +1183,7 @@ router.get("/exercise-completed-days/:rfid_tag", async (req, res) => {
     res.json(completedDays);
 
   } catch (error) {
-    console.error("❌ Error fetching completed days:", error);
+    console.error("Error fetching completed days:", error);
     res.status(500).json({ error: "Internal server error", details: error.message });
   }
 });
@@ -1226,7 +1199,6 @@ router.post("/exercise-day-complete", async (req, res) => {
   }
 
   try {
- 
     const memberResult = await db.query(
       "SELECT id FROM MembersAccounts WHERE rfid_tag = ?",
       [rfid_tag]
@@ -1293,7 +1265,7 @@ router.post("/exercise-day-complete", async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Error marking workout complete:", error);
+    console.error("Error marking workout complete:", error);
     res.status(500).json({ error: "Internal server error", details: error.message });
   }
 });
