@@ -39,6 +39,12 @@ router.get('/:email', async (req, res) => {
       return res.status(404).json({ message: 'Member not found' });
     }
 
+const [adminRows] = await db.query(
+  `SELECT gym_name FROM AdminAccounts WHERE id = ? LIMIT 1`,
+  [user.admin_id]
+);
+const gymName = adminRows?.[0]?.gym_name || null;
+
     let imagePath = user.profile_image_url && user.profile_image_url.trim() !== ''
       ? user.profile_image_url.trim()
       : 'default.png';
@@ -47,26 +53,25 @@ router.get('/:email', async (req, res) => {
       imagePath = `uploads/members/${imagePath}`;
     }
 
-    console.log("Profile data retrieved:", user);
-res.json({
-  profile: {
-    full_name: user.full_name,
-    created_at: user.created_at,
-    profile_image_url: imagePath,
-    email: user.email,
-    // Add these:
-    status: user.status,
-    current_balance: user.current_balance,
-    session_fee: user.session_fee,
-    gym_name: user.gym_name,
-  }
-});
+    res.json({
+      profile: {
+        member_id: user.id,
+        admin_id: user.admin_id,
+        full_name: user.full_name,
+        created_at: user.created_at,
+        profile_image_url: imagePath,
+        email: user.email,
+        status: user.status,
+        current_balance: user.current_balance,
+        session_fee: user.session_fee,
+        gym_name: gymName,
+      }
+    });
   } catch (error) {
     console.error('Error fetching profile:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
-
 
 
 module.exports = router;
