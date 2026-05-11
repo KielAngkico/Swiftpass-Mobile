@@ -20,14 +20,16 @@ router.get('/activity-log', async (req, res) => {
         `SELECT amount, timestamp, transaction_type, subscription_type 
          FROM AdminMembersTransactions 
          WHERE rfid_tag = ? 
-           AND transaction_type IN ('new_member', 'top_up')`,
+           AND transaction_type IN ('new_member', 'top_up', 'rfid_replacement')`,
         [rfid_tag]
       );
 
       tapUps.forEach(row => {
         finalList.push({
           transaction_id: null,
-          label: row.transaction_type === 'new_member' ? 'Activation' : 'Tap Up',
+          label: row.transaction_type === 'new_member' ? 'Activation' 
+     : row.transaction_type === 'rfid_replacement' ? 'RFID Replacement' 
+     : 'Tap Up',
           amount: Number(row.amount),
           timestamp: row.timestamp,
           subscription_type: row.subscription_type || null,
@@ -63,7 +65,7 @@ router.get('/activity-log', async (req, res) => {
         `SELECT amount, timestamp, transaction_type, subscription_type 
          FROM AdminMembersTransactions 
          WHERE rfid_tag = ? 
-           AND transaction_type IN ('new_subscription', 'renew_subscription')`,
+           AND transaction_type IN ('new_subscription', 'renew_subscription', 'rfid_replacement')`,
         [rfid_tag]
       );
 
