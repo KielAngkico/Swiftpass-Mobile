@@ -53,6 +53,7 @@ export default function ExerciseResult() {
   const [workoutPlan, setWorkoutPlan] = useState({});
   const [loading, setLoading] = useState(true);
   const [rfidTag, setRfidTag] = useState(null);
+  const [memberId, setMemberId] = useState(null);
   const [availableSplits, setAvailableSplits] = useState([]);
   const [completedDays, setCompletedDays] = useState({});
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
@@ -80,25 +81,23 @@ export default function ExerciseResult() {
   };
 
   // Load RFID tag
-  useEffect(() => {
-    if (params?.rfid) {
-      setRfidTag(params.rfid);
-    } else {
-      (async () => {
-        try {
-          const tag = await AsyncStorage.getItem("rfid_tag");
-          if (tag) setRfidTag(tag);
-        } catch (e) {
-          console.warn("Failed to load RFID tag from AsyncStorage", e);
-        }
-      })();
-    }
+useEffect(() => {
+    (async () => {
+      try {
+        const id = params?.member_id || await AsyncStorage.getItem("member_id");
+        const tag = params?.rfid || await AsyncStorage.getItem("rfid_tag");
+        if (id) setMemberId(id.toString());
+        if (tag) setRfidTag(tag);
+      } catch (e) {
+        console.warn("Failed to load identity from AsyncStorage", e);
+      }
+    })();
   }, [params]);
 
   // Fetch completed days from DB
-  const fetchCompletedDaysFromDB = async (rfid) => {
+const fetchCompletedDaysFromDB = async (memberId) => {
     try {
-      const res = await API.get(`/exercise-completed-days/${rfid}`);
+      const res = await API.get(`/exercise-completed-days/${memberId}`);
       if (res.status === 200) {
         const completedData = res.data;
         setCompletedDays(completedData);
@@ -110,13 +109,13 @@ export default function ExerciseResult() {
   };
 
   // Fetch workout plan
-  useEffect(() => {
-    if (!rfidTag) return;
+useEffect(() => {
+    if (!memberId) return;
 
     const fetchWorkoutPlanAndCompletedDays = async () => {
       setLoading(true);
       try {
-        const res = await API.get(`/results-routes/${rfidTag}`);
+        const res = await API.get(`/results-routes/${memberId}`);
         const data = res.data;
         setWorkoutPlan(data.workoutPlan || {});
 setAvailableSplits(Object.keys(data.workoutPlan || {}));
@@ -126,7 +125,7 @@ setCardioPreference(data.assessment?.cardio_preference ?? "No"); // add this
         const splits = Object.keys(data.workoutPlan || {});
         setAvailableSplits(splits);
 
-        await fetchCompletedDaysFromDB(rfidTag);
+        await fetchCompletedDaysFromDB(memberId);
       } catch (err) {
         Alert.alert("Error", err.message);
       } finally {
@@ -135,14 +134,15 @@ setCardioPreference(data.assessment?.cardio_preference ?? "No"); // add this
     };
 
     fetchWorkoutPlanAndCompletedDays();
-  }, [rfidTag]);
+  }, [memberId]);
 
   // Mark workout complete
-  const markWorkoutComplete = async () => {
+const markWorkoutComplete = async () => {
     if (!selectedSplit) return;
 
     try {
       await API.post("/exercise-day-complete", {
+        member_id: memberId,
         rfid_tag: rfidTag,
         split_name: selectedSplit,
         completion_date: dateKey,

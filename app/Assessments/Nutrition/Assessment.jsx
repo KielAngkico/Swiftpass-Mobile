@@ -361,9 +361,16 @@ const food_preferences_payload = Object.entries(selectedSpecificFoods).flatMap((
         if (response.data.summary) {
           console.log("Nutrition summary:", response.data.summary);
         }
-        router.push(
-          `/homepage?email=${encodeURIComponent(email)}&rfid_tag=${encodeURIComponent(rfid_tag)}&admin_id=${admin_id}&system_type=${system_type}`
-        );
+router.push({
+          pathname: '/homepage',
+          params: {
+            email,
+            member_id: memberId,
+            rfid_tag,
+            admin_id,
+            system_type,
+          },
+        });
       } else {
         throw new Error("Backend returned success: false");
       }

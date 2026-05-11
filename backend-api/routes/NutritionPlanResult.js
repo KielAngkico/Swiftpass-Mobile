@@ -3,19 +3,19 @@ const express = require("express");
 const router = express.Router();
 const db = require("../db");
 
-router.get("/nutrition-plan-result/:rfid_tag", async (req, res) => {
-  const { rfid_tag } = req.params;
+router.get("/nutrition-plan-result/:member_id", async (req, res) => {
+  const { member_id } = req.params;
   
-  console.log("🔹 Incoming request for RFID:", rfid_tag);
+  console.log("🔹 Incoming request for member_id:", member_id);
   
   try {
     const result = await db.query(
       `SELECT id, member_id, calories_target, protein_grams, carbs_grams, fats_grams 
        FROM NutritionAssessment 
-       WHERE rfid_tag = ? 
+       WHERE member_id = ? 
        ORDER BY id DESC 
        LIMIT 1`,
-      [rfid_tag]
+      [member_id]
     );
     
     console.log("🔹 Full query result:", result);
@@ -75,18 +75,17 @@ router.get("/nutrition-plan-result/:rfid_tag", async (req, res) => {
 });
 
 
-router.get("/specific-foods/:rfid_tag", async (req, res) => {
-  const { rfid_tag } = req.params;
-  console.log("🍽️ Fetching specific foods for RFID:", rfid_tag);
+router.get("/specific-foods/:member_id", async (req, res) => {
+  const { member_id } = req.params;
+  console.log("🍽️ Fetching specific foods for member_id:", member_id);
 
   try {
-
     const assessmentResult = await db.query(
       `SELECT id FROM NutritionAssessment 
-       WHERE rfid_tag = ? 
+       WHERE member_id = ? 
        ORDER BY id DESC 
        LIMIT 1`,
-      [rfid_tag]
+      [member_id]
     );
 
     let assessmentData = null;

@@ -225,7 +225,7 @@ const goNext = async () => {
     return;
   }
 
-  if (current.key === "done") {
+if (current.key === "done") {
     try {
       const memberId = await AsyncStorage.getItem("member_id");
       const admin_id = await AsyncStorage.getItem("admin_id");
@@ -233,9 +233,16 @@ const goNext = async () => {
       const email = await AsyncStorage.getItem("email");
       const system_type = await AsyncStorage.getItem("system_type");
 
-      router.push(
-        `/homepage?email=${encodeURIComponent(email)}&rfid_tag=${encodeURIComponent(rfid_tag)}&admin_id=${admin_id}&system_type=${system_type}`
-      );
+      router.push({
+        pathname: '/homepage',
+        params: {
+          email,
+          member_id: memberId,
+          rfid_tag,
+          admin_id,
+          system_type,
+        },
+      });
     } catch (err) {
       console.error("Error redirecting to homepage:", err);
       Alert.alert("Error", "Failed to go to homepage");

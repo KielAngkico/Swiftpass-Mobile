@@ -16,25 +16,25 @@ export default function NutritionResult() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview'); 
 
-  useEffect(() => {
+useEffect(() => {
     const fetchData = async () => {
       try {
-        const rfid_tag = await AsyncStorage.getItem("rfid_tag");
-        console.log("Using RFID Tag:", rfid_tag);
+        const member_id = await AsyncStorage.getItem("member_id");
+        console.log("Using member_id:", member_id);
         
-        if (!rfid_tag) {
-          Alert.alert("Error", "No RFID tag found in AsyncStorage.");
+        if (!member_id) {
+          Alert.alert("Error", "No member ID found. Please log in again.");
           setLoading(false);
           return;
         }
 
-        const nutritionRes = await API.get(`/nutrition-plan-result/${rfid_tag}`);
+        const nutritionRes = await API.get(`/nutrition-plan-result/${member_id}`);
         
         if (nutritionRes.data && typeof nutritionRes.data === 'object' && nutritionRes.data.calories_target) {
           setResult(nutritionRes.data);
 
           try {
-            const specificFoodsRes = await API.get(`/specific-foods/${rfid_tag}`);
+            const specificFoodsRes = await API.get(`/specific-foods/${member_id}`);
             if (specificFoodsRes.data && Array.isArray(specificFoodsRes.data)) {
               setSpecificFoods(specificFoodsRes.data);
               console.log("Loaded specific foods:", specificFoodsRes.data);

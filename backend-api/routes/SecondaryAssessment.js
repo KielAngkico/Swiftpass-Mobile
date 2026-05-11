@@ -908,17 +908,17 @@ router.post('/exercise/:member_id', async (req, res) => {
     status = 'confirmed'
   } = req.body;
 
-  if (!member_id || !rfid_tag || !fitness_level || !workout_days || !assigned_split_name) {
+if (!member_id || !fitness_level || !workout_days || !assigned_split_name) {
     return res.status(400).json({ 
       error: "Missing required fields", 
-      required: ["member_id", "rfid_tag", "fitness_level", "workout_days", "assigned_split_name"]
+      required: ["member_id", "fitness_level", "workout_days", "assigned_split_name"]
     });
   }
 
   try {
     const memberResult = await db.query(
-      "SELECT id FROM MembersAccounts WHERE id = ? AND rfid_tag = ?",
-      [member_id, rfid_tag]
+      "SELECT id FROM MembersAccounts WHERE id = ?",
+      [member_id]
     );
 
     let memberRows;
@@ -1011,8 +1011,8 @@ router.post('/exercise/:member_id', async (req, res) => {
 });
 
 
-router.get("/results-routes/:rfid_tag", async (req, res) => {
-  const { rfid_tag } = req.params;
+router.get("/results-routes/:member_id", async (req, res) => {
+  const { member_id } = req.params;
 
   try {
     const assessmentResult = await db.query(
@@ -1027,10 +1027,10 @@ router.get("/results-routes/:rfid_tag", async (req, res) => {
          ea.status,
          ea.completed_at
        FROM ExerciseAssessments ea
-       WHERE ea.rfid_tag = ?
+       WHERE ea.member_id = ?
        ORDER BY ea.completed_at DESC
        LIMIT 1`,
-      [rfid_tag]
+      [member_id]
     );
 
     let assessmentRows;
@@ -1151,8 +1151,8 @@ router.get("/results-routes/:rfid_tag", async (req, res) => {
   }
 });
 
-router.get("/exercise-completed-days/:rfid_tag", async (req, res) => {
-  const { rfid_tag } = req.params;
+router.get("/exercise-completed-days/:member_id", async (req, res) => {
+  const { member_id } = req.params;
 
   try {
     const completedResult = await db.query(
@@ -1160,9 +1160,9 @@ router.get("/exercise-completed-days/:rfid_tag", async (req, res) => {
          DATE(completion_date) as completion_date,
          split_name
        FROM ExerciseDayCompletions 
-       WHERE rfid_tag = ?
+       WHERE member_id = ?
        ORDER BY completion_date DESC`,
-      [rfid_tag]
+      [member_id]
     );
 
     let completedRows;
@@ -1187,42 +1187,21 @@ router.get("/exercise-completed-days/:rfid_tag", async (req, res) => {
     res.status(500).json({ error: "Internal server error", details: error.message });
   }
 });
-
 router.post("/exercise-day-complete", async (req, res) => {
-  const { rfid_tag, split_name, completion_date } = req.body;
+  const { member_id, rfid_tag, split_name, completion_date } = req.body;
 
-  if (!rfid_tag || !split_name || !completion_date) {
+  if (!member_id || !split_name || !completion_date) {
     return res.status(400).json({ 
       error: "Missing required fields", 
-      required: ["rfid_tag", "split_name", "completion_date"]
+      required: ["member_id", "split_name", "completion_date"]
     });
   }
 
   try {
-    const memberResult = await db.query(
-      "SELECT id FROM MembersAccounts WHERE rfid_tag = ?",
-      [rfid_tag]
-    );
-
-    let memberRows;
-    if (Array.isArray(memberResult)) {
-      memberRows = memberResult;
-    } else if (memberResult && Array.isArray(memberResult[0])) {
-      memberRows = memberResult[0];
-    } else {
-      memberRows = [];
-    }
-
-    if (!memberRows || memberRows.length === 0) {
-      return res.status(404).json({ error: "Member not found" });
-    }
-
-    const member_id = memberRows[0].id;
-
     const existingResult = await db.query(
       `SELECT id FROM ExerciseDayCompletions 
-       WHERE rfid_tag = ? AND split_name = ? AND DATE(completion_date) = ?`,
-      [rfid_tag, split_name, completion_date]
+       WHERE member_id = ? AND split_name = ? AND DATE(completion_date) = ?`,
+      [member_id, split_name, completion_date]
     );
 
     let existingRows;
@@ -1242,11 +1221,11 @@ router.post("/exercise-day-complete", async (req, res) => {
       });
     }
 
-    const insertResult = await db.query(
+const insertResult = await db.query(
       `INSERT INTO ExerciseDayCompletions
        (member_id, rfid_tag, split_name, completion_date, completed_at)
        VALUES (?, ?, ?, ?, NOW())`,
-      [member_id, rfid_tag, split_name, completion_date]
+      [member_id, rfid_tag || null, split_name, completion_date]
     );
 
     let result;
