@@ -205,14 +205,16 @@ return (
       <View className="flex-row justify-between items-center px-6 pt-12 pb-4">
         <View className="flex-1">
           <Text className="text-2xl font-bold text-white">Dashboard</Text>
-          <View className="flex-row items-center mt-1">
-            <Text className="text-white text-sm mr-2">SwiftPass System</Text>
-            <View
-              className={`w-2.5 h-2.5 rounded-full ${
-                profile?.profile_image_url ? "bg-emerald-500" : "bg-orange-400"
-              }`}
-            />
-          </View>
+<View className="flex-row items-center mt-1">
+  <Text className="text-white text-sm mr-2">
+    SwiftPass x {profile?.gym_name || 'Loading...'}
+  </Text>
+  <View
+    className={`w-2.5 h-2.5 rounded-full ${
+      profile?.profile_image_url ? "bg-emerald-500" : "bg-orange-400"
+    }`}
+  />
+</View>
         </View>
 
         <TouchableOpacity 
