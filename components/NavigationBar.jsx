@@ -4,8 +4,7 @@ import { Feather } from "@expo/vector-icons";
 import { useRouter, usePathname } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function NavigationBar({ email, rfid_tag, system_type, admin_id }) {
-  const router = useRouter();
+export default function NavigationBar({ email, member_id, rfid_tag, system_type, admin_id }) {  const router = useRouter();
   const pathname = usePathname();
 
   const navItems = [
@@ -23,9 +22,9 @@ export default function NavigationBar({ email, rfid_tag, system_type, admin_id }
             <TouchableOpacity
               key={key}
               onPress={() =>
-                router.push({
+router.push({
                   pathname: route,
-                  params: { email, rfid_tag, system_type, admin_id },
+                  params: { email, member_id, rfid_tag, system_type, admin_id },
                 })
               }
               className="items-center flex-1"

@@ -3,29 +3,29 @@ const router = express.Router();
 const { pool } = require('../db');
 
 router.get('/activity-history', async (req, res) => {
-  const { rfid_tag, system_type, admin_id } = req.query;
-  console.log('📩 Query:', { rfid_tag, system_type, admin_id });
+const { member_id, rfid_tag, system_type, admin_id } = req.query;
+  console.log('📩 Query:', { member_id, rfid_tag, system_type, admin_id });
 
-  if (!rfid_tag) {
-    console.warn('⚠️ Missing RFID tag in request');
-    return res.status(400).json({ message: 'rfid_tag is required' });
+  if (!member_id) {
+    console.warn('⚠️ Missing member_id in request');
+    return res.status(400).json({ message: 'member_id is required' });
   }
 
   try {
 const [rows] = await pool.query(
-  `SELECT 
-     id,
-     full_name,
-     entry_time,
-     exit_time,
-     admin_id
-   FROM AdminEntryLogs
-   WHERE rfid_tag = ?
-   ORDER BY entry_time DESC`,
-  [rfid_tag]
-);
+      `SELECT 
+         id,
+         full_name,
+         entry_time,
+         exit_time,
+         admin_id
+       FROM AdminEntryLogs
+       WHERE member_id = ?
+       ORDER BY entry_time DESC`,
+      [member_id]
+    );
 
-    console.log(`✅ Fetched ${rows.length} entry logs for RFID: ${rfid_tag}`);
+    console.log(`✅ Fetched ${rows.length} entry logs for member_id: ${member_id}`);
 
     const enrichedRows = await Promise.all(rows.map(async (entry, index) => {
       const [admin] = await pool.query(

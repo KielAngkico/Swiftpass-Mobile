@@ -4,11 +4,10 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import NavigationBar from '../../components/NavigationBar';
 import SimpleHeader from '../../components/SimpleHeader';
 import API from '../../backend-api/services/api';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 export default function TransactionsScreen() {
   const router = useRouter();
-  const { email = '', admin_id = '', rfid_tag = '', system_type = '' } = useLocalSearchParams();
-  const [transactions, setTransactions] = useState([]);
+const { email = '', member_id = '', admin_id = '', rfid_tag = '', system_type = '' } = useLocalSearchParams();  const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const groupByDate = (items) => {
@@ -27,9 +26,10 @@ export default function TransactionsScreen() {
 
   useEffect(() => {
     const fetchTransactions = async () => {
-      try {
-        if (!rfid_tag) throw new Error('RFID tag is missing.');
-        const res = await API.get(`/transactions/activity-log?rfid_tag=${rfid_tag}&system_type=${system_type}`);
+try {
+        const resolvedMemberId = member_id || await AsyncStorage.getItem('member_id');
+        if (!resolvedMemberId) throw new Error('Member ID is missing.');
+        const res = await API.get(`/transactions/activity-log?member_id=${resolvedMemberId}&system_type=${system_type}`);
         const items = res.data.transactions || [];
         setTransactions(groupByDate(items));
       } catch (err) {
@@ -41,7 +41,7 @@ export default function TransactionsScreen() {
     };
 
     fetchTransactions();
-  }, [rfid_tag, system_type]);
+  }, [member_id, system_type]);
 
   const formatTime = (dateStr) =>
     new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -148,8 +148,9 @@ export default function TransactionsScreen() {
       )}
 
       <View className="bg-white border-t border-gray-200 safe-area-bottom">
-        <NavigationBar
+<NavigationBar
           email={email}
+          member_id={member_id}
           rfid_tag={rfid_tag}
           system_type={system_type}
           admin_id={admin_id}

@@ -20,7 +20,8 @@ import { getFullPhotoUrl } from "../../../backend-api/services/Media_host";
 export default function SubscriptionHomepage() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const email = params?.email;
+const email = params?.email;
+  const member_id = params?.member_id;
   const admin_id = params?.admin_id;
   const rfid_tag = params?.rfid_tag;
   const system_type = params.system_type || '';
@@ -91,11 +92,14 @@ export default function SubscriptionHomepage() {
       Alert.alert('Error', 'Failed to check assessment.');
     }
   };
-
-  useEffect(() => {
+useEffect(() => {
     if (rfid_tag) {
       AsyncStorage.setItem("rfid_tag", rfid_tag.toString());
       console.log("Stored RFID Tag in AsyncStorage:", rfid_tag);
+    }
+    if (member_id) {
+      AsyncStorage.setItem("member_id", member_id.toString());
+      console.log("Stored member_id in AsyncStorage:", member_id);
     }
 
 
@@ -393,8 +397,9 @@ return (
     </ScrollView>
 
     <View className="bg-white border-t border-gray-200 safe-area-bottom">
-      <NavigationBar
+<NavigationBar
         email={email}
+        member_id={member_id}
         rfid_tag={rfid_tag}
         system_type={system_type}
         admin_id={admin_id}
