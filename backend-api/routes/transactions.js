@@ -5,10 +5,10 @@ const { pool } = require('../db');
 router.get('/activity-log', async (req, res) => {
   console.log('Query params:', req.query);
 
-  const { rfid_tag, system_type } = req.query;
+const { member_id, rfid_tag, system_type } = req.query;
 
-  if (!rfid_tag || !system_type) {
-    return res.status(400).json({ message: 'rfid_tag and system_type are required' });
+  if (!member_id || !system_type) {
+    return res.status(400).json({ message: 'member_id and system_type are required' });
   }
 
   try {
@@ -16,12 +16,12 @@ router.get('/activity-log', async (req, res) => {
 
     if (system_type === 'prepaid_entry') {
       // ✅ Get tap-ups and new member activations
-      const [tapUps] = await pool.query(
+const [tapUps] = await pool.query(
         `SELECT amount, timestamp, transaction_type, subscription_type 
          FROM AdminMembersTransactions 
-         WHERE rfid_tag = ? 
+         WHERE member_id = ? 
            AND transaction_type IN ('new_member', 'top_up', 'rfid_replacement')`,
-        [rfid_tag]
+        [member_id]
       );
 
       tapUps.forEach(row => {
@@ -37,12 +37,12 @@ router.get('/activity-log', async (req, res) => {
       });
 
       // ✅ FIXED: Only get entries where deducted_amount > 0 (exclude grace period)
-      const [entries] = await pool.query(
+const [entries] = await pool.query(
         `SELECT id, deducted_amount AS amount, entry_time AS timestamp, staff_name
          FROM AdminEntryLogs 
-         WHERE rfid_tag = ? 
-           AND deducted_amount > 0`,  // ✅ Only charged entries
-        [rfid_tag]
+         WHERE member_id = ? 
+           AND deducted_amount > 0`,
+        [member_id]
       );
 
       entries.forEach(row => {
@@ -61,12 +61,12 @@ router.get('/activity-log', async (req, res) => {
 
     } else if (system_type === 'subscription') {
       // ✅ Get subscriptions
-      const [subs] = await pool.query(
+const [subs] = await pool.query(
         `SELECT amount, timestamp, transaction_type, subscription_type 
          FROM AdminMembersTransactions 
-         WHERE rfid_tag = ? 
+         WHERE member_id = ? 
            AND transaction_type IN ('new_subscription', 'renew_subscription', 'rfid_replacement')`,
-        [rfid_tag]
+        [member_id]
       );
 
       subs.forEach(row => {
@@ -89,8 +89,7 @@ router.get('/activity-log', async (req, res) => {
     // ✅ Sort by most recent first
     finalList.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-    console.log(`✅ Returning ${finalList.length} transactions for ${rfid_tag}`);
-    return res.json({ transactions: finalList });
+console.log(`✅ Returning ${finalList.length} transactions for member_id: ${member_id}`);    return res.json({ transactions: finalList });
 
   } catch (error) {
     console.error('SQL error:', error);

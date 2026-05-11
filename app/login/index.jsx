@@ -184,8 +184,17 @@ export default function LoginScreen() {
     await AsyncStorage.setItem('system_type', user.system_type);
     await AsyncStorage.setItem('lastOtpVerified', new Date().toISOString());
 
-    if (user.hasInitialAssessment) {
-      router.push(`/homepage?email=${encodeURIComponent(user.email)}&rfid_tag=${encodeURIComponent(user.rfid_tag)}&admin_id=${user.admin_id}&system_type=${user.system_type}`);
+if (user.hasInitialAssessment) {
+      router.push({
+        pathname: '/homepage',
+        params: {
+          email: user.email,
+          member_id: user.member_id?.toString() || user.id?.toString(),
+          rfid_tag: user.rfid_tag,
+          admin_id: user.admin_id.toString(),
+          system_type: user.system_type,
+        },
+      });
     } else {
       router.push('Assessments/InitialAssessment');
     }

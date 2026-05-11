@@ -5,11 +5,11 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import NavigationBar from '../../components/NavigationBar';
 import SimpleHeader from '../../components/SimpleHeader';
 import API from '../../backend-api/services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function ActivityHistoryScreen() {
   const router = useRouter();
-  const { email = '', rfid_tag = '', system_type = '', admin_id = '' } = useLocalSearchParams();
-  const [logs, setLogs] = useState([]);
+const { email = '', member_id = '', rfid_tag = '', system_type = '', admin_id = '' } = useLocalSearchParams();  const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const groupByDate = (activities) => {
@@ -31,11 +31,12 @@ export default function ActivityHistoryScreen() {
 
   useEffect(() => {
     const fetchLogs = async () => {
-      try {
-        if (!rfid_tag) throw new Error('RFID tag is required.');
-const res = await API.get(
-  `/transactions/activity-history?rfid_tag=${rfid_tag}&system_type=${system_type}&admin_id=${admin_id}`
-);
+try {
+        const resolvedMemberId = member_id || await AsyncStorage.getItem('member_id');
+        if (!resolvedMemberId) throw new Error('Member ID is required.');
+        const res = await API.get(
+          `/transactions/activity-history?member_id=${resolvedMemberId}&system_type=${system_type}&admin_id=${admin_id}`
+        );
         const activities = res.data.activities || [];
         const mapped = activities.map((item) => ({
           ...item,
@@ -53,7 +54,7 @@ const res = await API.get(
     };
 
     fetchLogs();
-  }, [rfid_tag]);
+  }, [member_id]);
 
   if (loading) {
     return (
@@ -119,8 +120,9 @@ const res = await API.get(
       />
 
       <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200">
-        <NavigationBar
+<NavigationBar
           email={email}
+          member_id={member_id}
           rfid_tag={rfid_tag}
           system_type={system_type}
           admin_id={admin_id}
