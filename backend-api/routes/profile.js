@@ -48,14 +48,19 @@ router.get('/:email', async (req, res) => {
     }
 
     console.log("Profile data retrieved:", user);
-    res.json({
-      profile: {
-        full_name: user.full_name,
-        created_at: user.created_at,
-        profile_image_url: imagePath,
-        email: user.email,
-      }
-    });
+res.json({
+  profile: {
+    full_name: user.full_name,
+    created_at: user.created_at,
+    profile_image_url: imagePath,
+    email: user.email,
+    // Add these:
+    status: user.status,
+    current_balance: user.current_balance,
+    session_fee: user.session_fee,
+    gym_name: user.gym_name,
+  }
+});
   } catch (error) {
     console.error('Error fetching profile:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
