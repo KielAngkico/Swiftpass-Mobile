@@ -33,9 +33,9 @@ export default function ActivityHistoryScreen() {
     const fetchLogs = async () => {
       try {
         if (!rfid_tag) throw new Error('RFID tag is required.');
-        const res = await API.get(
-          `/activity-history?rfid_tag=${rfid_tag}&system_type=${system_type}&admin_id=${admin_id}`
-        );
+const res = await API.get(
+  `/transactions/activity-history?rfid_tag=${rfid_tag}&system_type=${system_type}&admin_id=${admin_id}`
+);
         const activities = res.data.activities || [];
         const mapped = activities.map((item) => ({
           ...item,
