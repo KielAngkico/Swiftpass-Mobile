@@ -52,7 +52,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api', balanceRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/transactions', transactionRoutes);
-app.use('/api', ActivityHistoryRoutes);
+app.use('/api/transactions', ActivityHistoryRoutes);
+
 
 app.use('/api', InitialAssessementRoutes); 
 app.use('/api', SecondaryAssessementRoutes); 
