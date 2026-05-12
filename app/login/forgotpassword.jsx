@@ -161,65 +161,67 @@ return (
             </TouchableOpacity>
           </>
         )}
-        {step === 3 && (
-          <>
-            <View className="flex-row justify-center space-x-3 mb-6">
-              {Array(4).fill(0).map((_, i) => (
-                <View
-                  key={i}
-                  className="w-12 h-12 bg-white rounded-lg border border-gray-300 items-center justify-center"
-                >
-                  <Text className="text-2xl text-black font-bold">
-                    {newPassword[i] ? "•" : ""}
-                  </Text>
-                </View>
-              ))}
-              <TextInput
-                value={newPassword}
-                onChangeText={(text) => {
-                  if (/^\d{0,4}$/.test(text)) setNewPassword(text);
-                }}
-                keyboardType="numeric"
-                maxLength={4}
-                secureTextEntry
-                autoFocus
-                style={{
-                  position: "absolute",
-                  opacity: 0,
-                  width: "100%",
-                  height: 60,
-                }}
-              />
-            </View>
-            <View className="flex-row justify-center space-x-3 mb-6">
-              {Array(4).fill(0).map((_, i) => (
-                <View
-                  key={i}
-                  className="w-12 h-12 bg-white rounded-lg border border-gray-300 items-center justify-center"
-                >
-                  <Text className="text-2xl text-black font-bold">
-                    {confirmPassword[i] ? "•" : ""}
-                  </Text>
-                </View>
-              ))}
-              <TextInput
-                value={confirmPassword}
-                onChangeText={(text) => {
-                  if (/^\d{0,4}$/.test(text)) setConfirmPassword(text);
-                }}
-                keyboardType="numeric"
-                maxLength={4}
-                secureTextEntry
-                style={{
-                  position: "absolute",
-                  opacity: 0,
-                  width: "100%",
-                  height: 60,
-                }}
-              />
-            </View>
-          </>
-        )}
+{step === 3 && (
+  <View className="gap-4 mb-6">
+    <View>
+      <Text className="text-sm font-medium text-gray-700 mb-2">
+        New 4-Digit PIN
+      </Text>
+
+      <TextInput
+        value={newPassword}
+        onChangeText={(text) => {
+          if (/^\d{0,4}$/.test(text)) setNewPassword(text);
+        }}
+        keyboardType="numeric"
+        maxLength={4}
+        secureTextEntry
+        placeholder="Enter PIN"
+        placeholderTextColor="#9CA3AF"
+        className="bg-[#FAFAFA] border border-gray-300 rounded-2xl px-5 py-4 text-base text-[#212121]"
+      />
+    </View>
+
+    <View>
+      <Text className="text-sm font-medium text-gray-700 mb-2">
+        Confirm PIN
+      </Text>
+
+      <TextInput
+        value={confirmPassword}
+        onChangeText={(text) => {
+          if (/^\d{0,4}$/.test(text)) setConfirmPassword(text);
+        }}
+        keyboardType="numeric"
+        maxLength={4}
+        secureTextEntry
+        placeholder="Re-enter PIN"
+        placeholderTextColor="#9CA3AF"
+        className={`bg-[#FAFAFA] border rounded-2xl px-5 py-4 text-base text-[#212121] ${
+          confirmPassword.length > 0
+            ? newPassword === confirmPassword
+              ? "border-green-500"
+              : "border-red-500"
+            : "border-gray-300"
+        }`}
+      />
+    </View>
+
+    {confirmPassword.length > 0 && (
+      <Text
+        className={`text-sm font-medium ${
+          newPassword === confirmPassword
+            ? "text-green-600"
+            : "text-red-500"
+        }`}
+      >
+        {newPassword === confirmPassword
+          ? "✓ PINs match"
+          : "PINs do not match"}
+      </Text>
+    )}
+  </View>
+)}
         <TouchableOpacity
           onPress={
             step === 1
