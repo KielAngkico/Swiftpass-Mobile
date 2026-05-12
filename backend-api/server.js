@@ -46,9 +46,10 @@ app.use((req, res, next) => {
 });
 
 
+
 app.use(
-  '/uploads',
-  express.static(path.join(__dirname, '..', 'public', 'uploads'))
+  "/uploads",
+  express.static(path.join(__dirname, "..", "Swiftpass-Web", "public", "uploads"))
 );
 app.use('/api/auth', authRoutes);
 app.use('/api', balanceRoutes);
