@@ -164,7 +164,7 @@ const saveAssessment = async () => {
       cardio_preference: answers.cardio ?? "No",
     };
 
-    if (!exerciseData.member_id || !exerciseData.rfid_tag) {
+if (!exerciseData.member_id) {
       Alert.alert("Error", "Missing member information. Please log in again.");
       return false; 
     }

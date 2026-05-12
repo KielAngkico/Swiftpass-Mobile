@@ -24,7 +24,7 @@ const [tapUps] = await pool.query(
         [member_id]
       );
 
-      tapUps.forEach(row => {
+tapUps.forEach(row => {
         finalList.push({
           transaction_id: null,
           label: row.transaction_type === 'new_member' ? 'Activation' 
@@ -33,6 +33,7 @@ const [tapUps] = await pool.query(
           amount: Number(row.amount),
           timestamp: row.timestamp,
           subscription_type: row.subscription_type || null,
+          transaction_type: row.transaction_type, // ✅ added
         });
       });
 
@@ -51,11 +52,12 @@ const [entries] = await pool.query(
           return; // Skip grace period entries
         }
 
-        finalList.push({
+finalList.push({
           transaction_id: row.id,
           label: 'Gym Entry',
           amount: -Number(row.amount),
           timestamp: row.timestamp,
+          transaction_type: 'gym_entry', // ✅ added
         });
       });
 
@@ -65,13 +67,17 @@ const [subs] = await pool.query(
         `SELECT amount, timestamp, transaction_type, subscription_type 
          FROM AdminMembersTransactions 
          WHERE member_id = ? 
-           AND transaction_type IN ('new_subscription', 'renew_subscription', 'rfid_replacement')`,
+           AND transaction_type IN ('new_member', 'renew_subscription', 'rfid_replacement')`,
         [member_id]
       );
 
-      subs.forEach(row => {
-        const labelBase = row.transaction_type === 'new_subscription' ? 'Activation' : 'Subscription';
-        const label = row.subscription_type ? `${labelBase}: ${row.subscription_type}` : labelBase;
+subs.forEach(row => {
+  const labelBase = row.transaction_type === 'new_member' ? 'Membership Fee' 
+    : row.transaction_type === 'rfid_replacement' ? 'RFID Replacement' 
+    : 'Subscription';
+  const label = row.subscription_type && row.transaction_type !== 'new_member' 
+    ? `${labelBase}: ${row.subscription_type}` 
+    : labelBase;
 
         finalList.push({
           transaction_id: null,

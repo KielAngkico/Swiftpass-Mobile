@@ -50,48 +50,29 @@ try {
     <View>
       <Text className="text-white text-sm font-semibold mx-4 mt-4">{item.date}</Text>
       {item.entries.map((entry, idx) => {
-        const isSubscription = system_type === 'subscription';
-        const isPrepaid = system_type === 'prepaid_entry';
-
-        // Check transaction type
+// Check transaction type
         const isTopUp = entry.transaction_type === 'top_up';
         const isGymEntry = entry.transaction_type === 'gym_entry' || entry.amount < 0;
-        const isFee = entry.transaction_type === 'new_member' || 
-                      entry.transaction_type === 'rfid_replacement' ||
-                      entry.transaction_type === 'new_subscription' ||
-                      entry.transaction_type === 'renew_subscription';
 
         // Amount formatting and color
         let amountText;
         let amountColorClass;
 
-        if (isSubscription) {
-          // Subscription: always white, no +/- sign
-          amountText = `₱${Math.abs(entry.amount)}`;
+        if (isTopUp) {
+          // Top up: always green + (prepaid only)
+          amountText = `+₱${Number(entry.amount).toFixed(2)}`;
+          amountColorClass = 'text-green-500';
+        } else if (isGymEntry) {
+          // Gym entry: always red - (prepaid only)
+          amountText = `-₱${Math.abs(Number(entry.amount)).toFixed(2)}`;
+          amountColorClass = 'text-red-500';
+        } else {
+          // Everything else: new_member, renew_subscription, rfid_replacement — neutral white
+          amountText = `₱${Math.abs(Number(entry.amount)).toFixed(2)}`;
           amountColorClass = 'text-gray-100';
-        } else if (isPrepaid) {
-          if (isTopUp) {
-            // Top up: green with + sign
-            amountText = `+₱${entry.amount}`;
-            amountColorClass = 'text-green-500';
-          } else if (isGymEntry) {
-            // Gym entry: red with - sign
-            amountText = `-₱${Math.abs(entry.amount)}`;
-            amountColorClass = 'text-red-500';
-          } else if (isFee) {
-            // Fees (membership, rfid replacement): white, no sign
-            amountText = `₱${Math.abs(entry.amount)}`;
-            amountColorClass = 'text-gray-100';
-          } else {
-            // Fallback
-            amountText = entry.amount >= 0 ? `+₱${entry.amount}` : `-₱${Math.abs(entry.amount)}`;
-            amountColorClass = entry.amount >= 0 ? 'text-green-500' : 'text-red-500';
-          }
         }
 
-        const labelText = entry.subscription_type && !entry.label.includes(entry.subscription_type)
-          ? `${entry.label}: ${entry.subscription_type}`
-          : entry.label;
+const labelText = entry.label;
 
         return (
           <View key={entry.transaction_id || `entry-${idx}`} className="mx-4 my-2">
