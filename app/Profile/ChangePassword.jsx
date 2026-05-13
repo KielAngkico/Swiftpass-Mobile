@@ -108,30 +108,33 @@ const handleSetNewPassword = async () => {
 };
 
 
-  const renderPinInput = (value, setValue) => (
-    <View className="flex-row justify-center space-x-3 mb-6">
-      {Array(4).fill(0).map((_, i) => (
-        <View
-          key={i}
-          className="w-14 h-14 bg-white rounded-lg border border-gray-300 items-center justify-center"
-        >
-          <Text className="text-2xl text-black font-bold">
-            {value[i] ? "•" : ""}
-          </Text>
-        </View>
-      ))}
-      <TextInput
-        value={value}
-        onChangeText={(text) => {
-          if (/^\d{0,4}$/.test(text)) setValue(text);
-        }}
-        keyboardType="numeric"
-        maxLength={4}
-        secureTextEntry
-        autoFocus
-        editable={!isLoading}
-        style={{ position: "absolute", opacity: 0, width: "100%", height: 60 }}
-      />
+const renderPinInput = (value, setValue, label) => (
+    <View className="w-full mb-6">
+      <Text className="text-sm text-white mb-2 text-center">{label}</Text>
+      <View className="flex-row justify-center space-x-3">
+        {Array(4).fill(0).map((_, i) => (
+          <View
+            key={i}
+            className="w-14 h-14 bg-white rounded-lg border border-gray-300 items-center justify-center"
+          >
+            <Text className="text-2xl text-black font-bold">
+              {value[i] ? "•" : ""}
+            </Text>
+          </View>
+        ))}
+        <TextInput
+          value={value}
+          onChangeText={(text) => {
+            if (/^\d{0,4}$/.test(text)) setValue(text);
+          }}
+          keyboardType="numeric"
+          maxLength={4}
+          secureTextEntry
+          autoFocus
+          editable={!isLoading}
+          style={{ position: "absolute", opacity: 0, width: "100%", height: 60 }}
+        />
+      </View>
     </View>
   );
 
@@ -149,13 +152,13 @@ const handleSetNewPassword = async () => {
             {step === 1 ? "Enter your current 4-digit PIN" : "Set your new 4-digit PIN"}
           </Text>
 
-          {step === 1 && renderPinInput(currentPassword, setCurrentPassword)}
-          {step === 2 && (
-            <>
-              {renderPinInput(newPassword, setNewPassword)}
-              {renderPinInput(confirmPassword, setConfirmPassword)}
-            </>
-          )}
+{step === 1 && renderPinInput(currentPassword, setCurrentPassword, "Current PIN")}
+{step === 2 && (
+  <>
+    {renderPinInput(newPassword, setNewPassword, "New PIN")}
+    {renderPinInput(confirmPassword, setConfirmPassword, "Confirm PIN")}
+  </>
+)}
 
           <TouchableOpacity
             onPress={step === 1 ? handleVerifyCurrentPassword : handleSetNewPassword}

@@ -162,12 +162,20 @@ return (
           </>
         )}
 {step === 3 && (
-  <View className="gap-4 mb-6">
-    <View>
-      <Text className="text-sm font-medium text-gray-700 mb-2">
-        New 4-Digit PIN
-      </Text>
-
+<View className="w-full mb-6">
+  <View className="w-full mb-6">
+    <Text className="text-sm text-white mb-2 text-center">New PIN</Text>
+    <View className="flex-row justify-center space-x-3">
+      {Array(4).fill(0).map((_, i) => (
+        <View
+          key={i}
+          className="w-14 h-14 bg-white rounded-lg border border-gray-300 items-center justify-center"
+        >
+          <Text className="text-2xl text-black font-bold">
+            {newPassword[i] ? "•" : ""}
+          </Text>
+        </View>
+      ))}
       <TextInput
         value={newPassword}
         onChangeText={(text) => {
@@ -176,17 +184,25 @@ return (
         keyboardType="numeric"
         maxLength={4}
         secureTextEntry
-        placeholder="Enter PIN"
-        placeholderTextColor="#9CA3AF"
-        className="bg-[#FAFAFA] border border-gray-300 rounded-2xl px-5 py-4 text-base text-[#212121]"
+        autoFocus
+        style={{ position: "absolute", opacity: 0, width: "100%", height: 60 }}
       />
     </View>
+  </View>
 
-    <View>
-      <Text className="text-sm font-medium text-gray-700 mb-2">
-        Confirm PIN
-      </Text>
-
+  <View className="w-full mb-6">
+    <Text className="text-sm text-white mb-2 text-center">Confirm PIN</Text>
+    <View className="flex-row justify-center space-x-3">
+      {Array(4).fill(0).map((_, i) => (
+        <View
+          key={i}
+          className="w-14 h-14 bg-white rounded-lg border border-gray-300 items-center justify-center"
+        >
+          <Text className="text-2xl text-black font-bold">
+            {confirmPassword[i] ? "•" : ""}
+          </Text>
+        </View>
+      ))}
       <TextInput
         value={confirmPassword}
         onChangeText={(text) => {
@@ -195,32 +211,11 @@ return (
         keyboardType="numeric"
         maxLength={4}
         secureTextEntry
-        placeholder="Re-enter PIN"
-        placeholderTextColor="#9CA3AF"
-        className={`bg-[#FAFAFA] border rounded-2xl px-5 py-4 text-base text-[#212121] ${
-          confirmPassword.length > 0
-            ? newPassword === confirmPassword
-              ? "border-green-500"
-              : "border-red-500"
-            : "border-gray-300"
-        }`}
+        style={{ position: "absolute", opacity: 0, width: "100%", height: 60 }}
       />
     </View>
-
-    {confirmPassword.length > 0 && (
-      <Text
-        className={`text-sm font-medium ${
-          newPassword === confirmPassword
-            ? "text-green-600"
-            : "text-red-500"
-        }`}
-      >
-        {newPassword === confirmPassword
-          ? "✓ PINs match"
-          : "PINs do not match"}
-      </Text>
-    )}
   </View>
+</View>
 )}
         <TouchableOpacity
           onPress={
@@ -236,7 +231,9 @@ return (
             {step === 1 ? 'Send OTP' : step === 2 ? 'Verify OTP' : 'Reset PIN'}
           </Text>
         </TouchableOpacity>
-
+<TouchableOpacity onPress={() => router.back()} className="mt-4">
+  <Text className="text-sm text-white font-semibold">← Back</Text>
+</TouchableOpacity>
         <Text className="text-xs text-white mt-6">
           © 2025 SwiftPass. All rights reserved.
         </Text>

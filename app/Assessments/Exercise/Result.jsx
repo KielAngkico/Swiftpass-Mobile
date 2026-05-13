@@ -110,6 +110,7 @@ const fetchCompletedDaysFromDB = async (memberId) => {
 
   // Fetch workout plan
 useEffect(() => {
+    console.log("memberId:", memberId);
     if (!memberId) return;
 
     const fetchWorkoutPlanAndCompletedDays = async () => {

@@ -96,26 +96,16 @@ export default function WorkoutTab({
   openExerciseModal,
   mondayDate,
   rfid,
+    cardioPreference,
 }) {
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
-  const [cardioPreference, setCardioPreference] = useState(null);
 const [cardioLog, setCardioLog] = useState({});
 const [cardioModalVisible, setCardioModalVisible] = useState(false);
 const [cardioExercises, setCardioExercises] = useState([]);
 const [loadingCardio, setLoadingCardio] = useState(false);
-
 useEffect(() => {
-  if (!rfid) return;
-  const fetchCardioPreference = async () => {
-    try {
-const res = await API.get(`/results-routes/${rfid}`);
-setCardioPreference(res.data?.assessment?.cardio_preference ?? "No");
-    } catch (err) {
-      console.error("Error fetching cardio preference:", err);
-    }
-  };
-  fetchCardioPreference();
-}, [rfid]);
+  if (!cardioPreference) return;
+}, [cardioPreference]);
 
 useEffect(() => {
   if (!rfid || cardioPreference === "No" || cardioPreference === null) return;
@@ -137,6 +127,7 @@ const openCardioModal = async () => {
     setLoadingCardio(true);
     setCardioModalVisible(true);
     const res = await API.get(`/exercises?category=cardio`);
+    console.log("Cardio exercises response:", JSON.stringify(res.data, null, 2));
     setCardioExercises(res.data?.data || res.data || []);
   } catch (err) {
     console.error("Error fetching cardio exercises:", err);
@@ -304,62 +295,6 @@ const pickCardio = async (exercise) => {
             </View>
           )}
 
-<Modal visible={cardioModalVisible} transparent animationType="fade">
-  <View className="flex-1 justify-center items-center px-5" style={{ backgroundColor: "rgba(0,0,0,0.7)" }}>
-    <View className="bg-gray-800 rounded-2xl w-full overflow-hidden" style={{ maxHeight: "75%" }}>
-
-      {/* Header */}
-      <View className="flex-row justify-between items-center p-5 border-b border-gray-700">
-        <View>
-          <Text className="text-white text-lg font-bold">Pick Cardio</Text>
-          <Text className="text-gray-400 text-xs mt-0.5">Choose your cardio for today</Text>
-        </View>
-        <TouchableOpacity
-          onPress={() => setCardioModalVisible(false)}
-          className="bg-gray-700 rounded-full w-9 h-9 items-center justify-center"
-        >
-          <Ionicons name="close" size={20} color="#fff" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Body */}
-      {loadingCardio ? (
-        <View className="items-center py-10">
-          <Text className="text-gray-400">Loading cardio exercises...</Text>
-        </View>
-      ) : (
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16 }}>
-          {cardioExercises.map((exercise) => (
-            <TouchableOpacity
-              key={exercise.id}
-              onPress={() => pickCardio(exercise)}
-              className="flex-row items-center bg-gray-900 rounded-2xl p-3 mb-3 border border-gray-700"
-            >
-              <Image
-                source={{ uri: getFullPhotoUrl(exercise.image_url) }}
-                style={{ width: 60, height: 60, borderRadius: 10, backgroundColor: "#4B5563" }}
-                resizeMode="cover"
-              />
-              <View className="ml-3 flex-1">
-                <Text className="text-white font-semibold text-base">{exercise.name}</Text>
-                {exercise.muscle_group && (
-                  <Text className="text-blue-400 text-sm capitalize mt-0.5">{exercise.muscle_group}</Text>
-                )}
-                {exercise.equipment && (
-                  <Text className="text-gray-500 text-xs mt-0.5">{exercise.equipment}</Text>
-                )}
-              </View>
-              <View className="bg-blue-600 rounded-lg px-3 py-1.5">
-                <Text className="text-white text-xs font-semibold">Select</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      )}
-
-    </View>
-  </View>
-</Modal>
           {/* Exercise List */}
           <View className="bg-gray-800 rounded-2xl p-6 shadow-xl">
             <View className="flex-row justify-between items-center mb-4">
@@ -491,7 +426,43 @@ const pickCardio = async (exercise) => {
             </TouchableOpacity>
           )}
         </>
-      )}
+)}
+
+      <Modal visible={cardioModalVisible} transparent animationType="fade">
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 20, backgroundColor: "rgba(0,0,0,0.7)" }}>
+          <View style={{ backgroundColor: "#1f2937", borderRadius: 16, width: "100%", maxHeight: "75%", overflow: "hidden" }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 20, borderBottomWidth: 1, borderBottomColor: "#374151" }}>
+              <Text style={{ color: "#fff", fontSize: 18, fontWeight: "bold" }}>Pick Cardio</Text>
+              <TouchableOpacity onPress={() => setCardioModalVisible(false)}>
+                <Ionicons name="close" size={20} color="#fff" />
+              </TouchableOpacity>
+            </View>
+            {loadingCardio ? (
+              <View style={{ alignItems: "center", padding: 40 }}>
+                <Text style={{ color: "#9ca3af" }}>Loading...</Text>
+              </View>
+            ) : (
+              <ScrollView contentContainerStyle={{ padding: 16 }}>
+                {cardioExercises.map((exercise) => (
+                  <TouchableOpacity
+                    key={exercise.id}
+                    onPress={() => pickCardio(exercise)}
+                    style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#111827", borderRadius: 16, padding: 12, marginBottom: 12, borderWidth: 1, borderColor: "#374151" }}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: "#fff", fontWeight: "600", fontSize: 15 }}>{exercise.name}</Text>
+                      {exercise.muscle_group && <Text style={{ color: "#60a5fa", fontSize: 13 }}>{exercise.muscle_group}</Text>}
+                    </View>
+                    <View style={{ backgroundColor: "#2563eb", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 }}>
+                      <Text style={{ color: "#fff", fontSize: 12, fontWeight: "600" }}>Select</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
