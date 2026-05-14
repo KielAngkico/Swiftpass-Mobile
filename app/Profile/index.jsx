@@ -2,22 +2,23 @@ import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, Modal, Image } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import { getFullPhotoUrl } from "../../backend-api/services/Media_host";
+// removed Media_host import
 
 export default function ProfileModal({ visible, onClose, profile, system_type }) {
   const router = useRouter();
   const [imageKey, setImageKey] = useState(Date.now());
 
   // Update image key whenever modal opens or profile changes
-  useEffect(() => {
-    if (visible) {
-      setImageKey(Date.now());
-    }
-  }, [visible, profile?.profile_image_url]);
+useEffect(() => {
+  if (visible && profile?.profile_image_url) {
+    setImageKey(Date.now());
+  }
+}, [visible, profile?.profile_image_url]);
+const photoUrl = profile?.profile_image_url 
+  ? `https://swiftpasstech.com/${profile.profile_image_url}`
+  : null;
 
-  const photoUrl = profile?.profile_image_url 
-    ? `${getFullPhotoUrl(profile.profile_image_url)}?t=${imageKey}`
-    : null;
+console.log("📸 photoUrl:", photoUrl);
 
   const memberSince = profile?.created_at
     ? new Date(profile.created_at).toLocaleDateString(undefined, {
@@ -46,15 +47,16 @@ export default function ProfileModal({ visible, onClose, profile, system_type })
           </TouchableOpacity>
 
           <View className="flex-row items-center space-x-4 mb-6">
-            <View className="w-24 h-24 bg-gray-700 rounded-xl items-center justify-center overflow-hidden">
-              {photoUrl ? (
-                <Image
-                  key={imageKey} // Force re-render when key changes
-                  source={{ uri: photoUrl }}
-                  className="w-full h-full"
-                  resizeMode="cover"
-                />
-              ) : (
+ <View style={{ width: 96, height: 96, backgroundColor: '#374151', borderRadius: 12, overflow: 'hidden' }}>
+  {photoUrl ? (
+<Image
+  source={{ uri: photoUrl }}
+  style={{ width: 96, height: 96 }}
+  resizeMode="cover"
+ 
+  onError={(e) => console.log("❌ Profile modal image error:", e.nativeEvent.error)}
+/>
+  ) : (
                 <Text className="text-4xl font-bold text-gray-400">
                   {profile?.full_name?.charAt(0) || "?"}
                 </Text>

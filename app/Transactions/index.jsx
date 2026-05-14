@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, Alert, ScrollView, TouchableOpacity, Platform } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import NavigationBar from '../../components/NavigationBar';
 import SimpleHeader from '../../components/SimpleHeader';
@@ -8,7 +9,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export default function TransactionsScreen() {
   const router = useRouter();
 const { email = '', member_id = '', admin_id = '', rfid_tag = '', system_type = '' } = useLocalSearchParams();  const [transactions, setTransactions] = useState([]);
-  const [loading, setLoading] = useState(true);
+const [selectedDate, setSelectedDate] = useState(null);
+const [showDatePicker, setShowDatePicker] = useState(false);
+const [allTransactions, setAllTransactions] = useState([]);
+const [loading, setLoading] = useState(true);
 
   const groupByDate = (items) => {
     const grouped = {};
@@ -31,7 +35,8 @@ try {
         if (!resolvedMemberId) throw new Error('Member ID is missing.');
         const res = await API.get(`/transactions/activity-log?member_id=${resolvedMemberId}&system_type=${system_type}`);
         const items = res.data.transactions || [];
-        setTransactions(groupByDate(items));
+        setAllTransactions(items);
+setTransactions(groupByDate(items));
       } catch (err) {
         console.error('Transaction Fetch Error:', err.message);
         Alert.alert('Error', err.message || 'Failed to load transactions.');
@@ -98,7 +103,17 @@ const labelText = entry.label;
       })}
     </View>
   );
+useEffect(() => {
+  let filtered = [...allTransactions];
 
+  if (selectedDate) {
+    filtered = filtered.filter(t =>
+      new Date(t.timestamp).toDateString() === selectedDate.toDateString()
+    );
+  }
+
+  setTransactions(groupByDate(filtered));
+}, [selectedDate, allTransactions]);
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center bg-gray-900">
@@ -108,9 +123,38 @@ const labelText = entry.label;
     );
   }
 
-  return (
+return (
     <View className="flex-1 bg-gray-900">
       <SimpleHeader title="Transaction History" />
+      <View className="px-4 pt-3 pb-2 bg-gray-900">
+<TouchableOpacity
+    onPress={() => setShowDatePicker(true)}
+    className="bg-gray-800 rounded-xl px-4 py-3 mb-3 border border-gray-700 flex-row justify-between items-center"
+  >
+    <Text className={selectedDate ? 'text-white' : 'text-gray-500'}>
+      {selectedDate
+        ? selectedDate.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+        : 'Filter by date...'}
+    </Text>
+    {selectedDate && (
+      <TouchableOpacity onPress={() => setSelectedDate(null)}>
+        <Text className="text-red-400 text-sm">Clear</Text>
+      </TouchableOpacity>
+    )}
+  </TouchableOpacity>
+  {showDatePicker && (
+    <DateTimePicker
+      value={selectedDate || new Date()}
+      mode="date"
+      display={Platform.OS === 'ios' ? 'inline' : 'default'}
+      onChange={(event, date) => {
+        setShowDatePicker(false);
+        if (date) setSelectedDate(date);
+      }}
+    />
+  )}
+
+</View>
 
       {transactions.length === 0 ? (
         <View className="flex-1 justify-center items-center">

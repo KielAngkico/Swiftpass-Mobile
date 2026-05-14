@@ -610,16 +610,21 @@ router.push({
         className="flex-row justify-between items-center p-4 border-t border-gray-700 bg-gray-900"
         style={{ paddingBottom: insets.bottom + 16 }}
       >
-        {step > 0 ? (
-          <TouchableOpacity
-            onPress={goBack}
-            className="w-12 h-12 rounded-full bg-gray-700 justify-center items-center"
-          >
-            <Ionicons name="arrow-back" size={20} color="#fff" />
-          </TouchableOpacity>
-        ) : (
-          <View className="w-12" />
-        )}
+{step > 0 ? (
+  <TouchableOpacity
+    onPress={goBack}
+    className="w-12 h-12 rounded-full bg-gray-700 justify-center items-center"
+  >
+    <Ionicons name="arrow-back" size={20} color="#fff" />
+  </TouchableOpacity>
+) : (
+  <TouchableOpacity
+    onPress={() => router.back()}
+    className="w-12 h-12 rounded-full bg-gray-700 justify-center items-center"
+  >
+    <Ionicons name="arrow-back" size={20} color="#fff" />
+  </TouchableOpacity>
+)}
 
         <TouchableOpacity
           onPress={goNext}

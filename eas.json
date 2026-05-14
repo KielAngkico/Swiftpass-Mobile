@@ -9,16 +9,25 @@
       "distribution": "internal"
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+"env": {
+  "EXPO_PUBLIC_API_URL": "https://api.swiftpasstech.com/api",
+  "EXPO_PUBLIC_MEDIA_URL": "https://swiftpasstech.com"
+}
     },
     "production": {
       "autoIncrement": true,
-      "android": { "buildType": "apk" },
+      "android": {
+        "buildType": "aab"
+      },
       "distribution": "internal",
-      "env": {
-        "EXPO_PUBLIC_API_URL": "https://api.swiftpasstech.com/api",
-        "EXPO_PUBLIC_MEDIA_URL": "https://api.swiftpasstech.com"
-      }
+"env": {
+  "EXPO_PUBLIC_API_URL": "https://api.swiftpasstech.com/api",
+  "EXPO_PUBLIC_MEDIA_URL": "https://swiftpasstech.com"
+}
     }
   },
   "submit": {

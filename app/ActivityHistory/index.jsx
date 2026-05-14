@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, Alert, TouchableOpacity, Platform } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import NavigationBar from '../../components/NavigationBar';
@@ -10,7 +11,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export default function ActivityHistoryScreen() {
   const router = useRouter();
 const { email = '', member_id = '', rfid_tag = '', system_type = '', admin_id = '' } = useLocalSearchParams();  const [logs, setLogs] = useState([]);
-  const [loading, setLoading] = useState(true);
+const [selectedDate, setSelectedDate] = useState(null);
+const [showDatePicker, setShowDatePicker] = useState(false);
+const [allLogs, setAllLogs] = useState([]);
+const [loading, setLoading] = useState(true);
 
   const groupByDate = (activities) => {
     const grouped = {};
@@ -44,7 +48,8 @@ try {
           timestamp: item.timestamp || item.entry_time,
           exit_time: item.exit_time,
         }));
-        setLogs(groupByDate(mapped));
+        setAllLogs(mapped);
+setLogs(groupByDate(mapped));
       } catch (err) {
         console.error('Activity Log Error:', err.message);
         Alert.alert('Error', err.message || 'Failed to load activity history.');
@@ -56,6 +61,18 @@ try {
     fetchLogs();
   }, [member_id]);
 
+useEffect(() => {
+  let filtered = [...allLogs];
+
+  if (selectedDate) {
+    filtered = filtered.filter(l =>
+      new Date(l.timestamp).toDateString() === selectedDate.toDateString()
+    );
+  }
+
+  setLogs(groupByDate(filtered));
+}, [selectedDate, allLogs]);
+
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center bg-gray-900">
@@ -64,11 +81,38 @@ try {
       </View>
     );
   }
-
   return (
     <View className="flex-1 bg-gray-900">
       <SimpleHeader title="Activity History" />
+<View className="px-4 pt-3 pb-2 bg-gray-900">
+<TouchableOpacity
+    onPress={() => setShowDatePicker(true)}
+    className="bg-gray-800 rounded-xl px-4 py-3 mb-3 border border-gray-700 flex-row justify-between items-center"
+  >
+    <Text className={selectedDate ? 'text-white' : 'text-gray-500'}>
+      {selectedDate
+        ? selectedDate.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+        : 'Filter by date...'}
+    </Text>
+    {selectedDate && (
+      <TouchableOpacity onPress={() => setSelectedDate(null)}>
+        <Text className="text-red-400 text-sm">Clear</Text>
+      </TouchableOpacity>
+    )}
+  </TouchableOpacity>
+  {showDatePicker && (
+    <DateTimePicker
+      value={selectedDate || new Date()}
+      mode="date"
+      display={Platform.OS === 'ios' ? 'inline' : 'default'}
+      onChange={(event, date) => {
+        setShowDatePicker(false);
+        if (date) setSelectedDate(date);
+      }}
+    />
+  )}
 
+</View>
       <FlatList
         data={logs}
         keyExtractor={(item, index) => index.toString()}

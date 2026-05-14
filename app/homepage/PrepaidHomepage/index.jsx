@@ -228,7 +228,7 @@ useEffect(() => {
                 source={{ uri: getFullPhotoUrl(profile.profile_image_url) }}
                 style={{ width: 56, height: 56, borderRadius: 16 }}
                 resizeMode="cover"
-                onError={(e) => console.log("Image load error:", e.nativeEvent.error)}
+
               />
             ) : (
               <View className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
