@@ -210,9 +210,13 @@ return (
         <View className="flex-1">
           <Text className="text-2xl font-bold text-white">Dashboard</Text>
 <View className="flex-row items-center mt-1">
-  <Text className="text-white text-sm mr-2">
-    SwiftPass x {profile?.gym_name || 'Loading...'}
-  </Text>
+  {profile?.gym_name ? (
+    <Text className="text-white text-sm mr-2">
+      SwiftPass x {profile.gym_name}
+    </Text>
+) : (
+    <View className="h-4 w-36 bg-gray-600 rounded-full mr-2" />
+  )}
   <View
     className={`w-2.5 h-2.5 rounded-full ${
       profile?.profile_image_url ? "bg-emerald-500" : "bg-orange-400"
@@ -226,10 +230,13 @@ return (
           className="bg-white rounded-2xl shadow-md border border-gray-200"
         >
           {profile?.profile_image_url ? (
-            <Image
-              source={{ uri: `${getFullPhotoUrl(profile.profile_image_url)}?t=${Date.now()}` }}
-              className="w-14 h-14 rounded-2xl"
-            />
+<Image
+  source={{ uri: getFullPhotoUrl(profile.profile_image_url) }}
+  style={{ width: 56, height: 56, borderRadius: 16 }}
+  resizeMode="cover"
+  onError={(e) => console.log("Image load error:", e.nativeEvent.error)}
+  onLoad={() => console.log("Image loaded successfully")}
+/>
           ) : (
             <View className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
               <Text className="text-white font-bold text-lg">

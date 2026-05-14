@@ -47,7 +47,7 @@ export default function NutritionAssessment() {
     allergies: [], 
     food_preferences: {} 
   });
-  const [otherAllergy, setOtherAllergy] = useState("");
+  
   const [foodGroups, setFoodGroups] = useState({});
   const [filteredFoodGroups, setFilteredFoodGroups] = useState({});
   const [allergensList, setAllergensList] = useState([]);
@@ -72,7 +72,7 @@ export default function NutritionAssessment() {
       try {
         const res = await API.get("/allergens");
         const allergens = Array.isArray(res.data) ? res.data : [];
-        const list = [...allergens.map(a => ({ id: a.id, name: a.name })), { id: "Other", name: "Other (please specify)" }];
+        const list = allergens.map(a => ({ id: a.id, name: a.name }));
         setAllergensList(list);
         steps.find(s => s.key === "allergies").options = list.map(a => a.name);
       } catch (err) {
@@ -544,15 +544,7 @@ router.push({
                 </TouchableOpacity>
               ))}
             </View>
-            {answers.allergies?.includes("Other") && (
-              <TextInput 
-                className="bg-gray-800 border border-gray-700 mt-4 p-3 rounded text-white" 
-                placeholder="Please specify your allergy"
-                placeholderTextColor="#9CA3AF"
-                value={otherAllergy} 
-                onChangeText={setOtherAllergy} 
-              />
-            )}
+
           </>
         )}
       </ScrollView>

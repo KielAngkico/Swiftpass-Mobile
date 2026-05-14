@@ -53,8 +53,14 @@ export default function InitialAssessment() {
   const [step, setStep] = useState(0);
   const [formData, setFormData] = useState({});
   const [inputValue, setInputValue] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [showCalories, setShowCalories] = useState(false);
+const [loading, setLoading] = useState(false);
+const [showCalories, setShowCalories] = useState(false);
+const [heightUnit, setHeightUnit] = useState('cm');
+const [weightUnit, setWeightUnit] = useState('kg');
+const [heightCmInput, setHeightCmInput] = useState('');
+const [heightFtInput, setHeightFtInput] = useState('');
+const [heightInInput, setHeightInInput] = useState('');
+const [weightInput, setWeightInput] = useState('');
 
   const current = questions[step];
   const username = formData.username || '';
@@ -87,6 +93,35 @@ const goNext = () => {
   if (current?.options && !formData[current.key]) {
     Alert.alert('Selection required', 'Please choose one option to continue');
     return;
+  }
+
+if (current.key === 'personal_info') {
+    let finalHeightCm;
+    if (heightUnit === 'cm') {
+      finalHeightCm = parseFloat(heightCmInput);
+    } else {
+      const feet = parseFloat(heightFtInput) || 0;
+      const inches = parseFloat(heightInInput) || 0;
+      finalHeightCm = parseFloat(((feet * 12 + inches) * 2.54).toFixed(1));
+    }
+
+    let finalWeightKg;
+    if (weightUnit === 'kg') {
+      finalWeightKg = parseFloat(weightInput);
+    } else {
+      finalWeightKg = parseFloat((parseFloat(weightInput) * 0.453592).toFixed(1));
+    }
+
+    if (!finalHeightCm || !finalWeightKg || !formData.sex || !formData.age) {
+      Alert.alert('Missing info', 'Please fill in all personal details');
+      return;
+    }
+
+setFormData((prev) => ({
+      ...prev,
+      height_cm: finalHeightCm,
+      weight_kg: finalWeightKg,
+    }));
   }
 
   if (step === questions.length - 1) {
@@ -223,7 +258,7 @@ return (
       <ActivityIndicator size="large" color="#5E17EB" className="mt-6" />
     ) : showCalories ? (
       <View className="flex-1">
-        <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 24 }}>
+        <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 24, justifyContent: 'center' }}>
           <Text className="text-2xl font-bold mb-6 text-center text-white">
             Calorie Guide
           </Text>
@@ -288,7 +323,7 @@ return (
               : current.question}
           </Text>
 
-          {current.key === 'personal_info' ? (
+{current.key === 'personal_info' ? (
             <>
               <View className="flex-row justify-center gap-4 mb-4">
                 {['Male', 'Female'].map((option) => (
@@ -301,11 +336,9 @@ return (
                     }`}
                     onPress={() => handleSelect('sex', option)}
                   >
-                    <Text
-                      className={`text-center font-semibold text-lg ${
-                        formData.sex === option.toLowerCase() ? 'text-white' : 'text-gray-200'
-                      }`}
-                    >
+                    <Text className={`text-center font-semibold text-lg ${
+                      formData.sex === option.toLowerCase() ? 'text-white' : 'text-gray-200'
+                    }`}>
                       {option}
                     </Text>
                   </TouchableOpacity>
@@ -320,22 +353,85 @@ return (
                 onChangeText={(val) => setFormData((prev) => ({ ...prev, age: val }))}
                 className="border border-gray-700 rounded-lg p-4 text-lg text-white mb-4 bg-gray-800"
               />
-              <TextInput
-                placeholder="How tall are you (cm)?"
-                placeholderTextColor="#9CA3AF"
-                keyboardType="numeric"
-                value={formData.height_cm || ''}
-                onChangeText={(val) => setFormData((prev) => ({ ...prev, height_cm: val }))}
-                className="border border-gray-700 rounded-lg p-4 text-lg text-white mb-4 bg-gray-800"
-              />
-              <TextInput
-                placeholder="How much do you weigh (kg)?"
-                placeholderTextColor="#9CA3AF"
-                keyboardType="numeric"
-                value={formData.weight_kg || ''}
-                onChangeText={(val) => setFormData((prev) => ({ ...prev, weight_kg: val }))}
-                className="border border-gray-700 rounded-lg p-4 text-lg text-white bg-gray-800"
-              />
+
+              {/* HEIGHT */}
+              <View className="mb-4">
+                <View className="flex-row justify-between items-center mb-2">
+                  <Text className="text-gray-300 font-semibold">Height</Text>
+                  <View className="flex-row bg-gray-800 rounded-lg overflow-hidden border border-gray-700">
+                    {['cm', 'ft'].map((unit) => (
+                      <TouchableOpacity
+                        key={unit}
+                        onPress={() => setHeightUnit(unit)}
+                        className={`px-4 py-2 ${heightUnit === unit ? 'bg-blue-400' : ''}`}
+                      >
+                        <Text className={`font-semibold ${heightUnit === unit ? 'text-white' : 'text-gray-400'}`}>
+                          {unit}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+
+                {heightUnit === 'cm' ? (
+                  <TextInput
+                    placeholder="Height in cm"
+                    placeholderTextColor="#9CA3AF"
+                    keyboardType="numeric"
+                    value={heightCmInput}
+                    onChangeText={setHeightCmInput}
+                    className="border border-gray-700 rounded-lg p-4 text-lg text-white bg-gray-800"
+                  />
+                ) : (
+                  <View className="flex-row gap-3">
+                    <TextInput
+                      placeholder="Feet"
+                      placeholderTextColor="#9CA3AF"
+                      keyboardType="numeric"
+                      value={heightFtInput}
+                      onChangeText={setHeightFtInput}
+                      className="flex-1 border border-gray-700 rounded-lg p-4 text-lg text-white bg-gray-800"
+                    />
+                    <TextInput
+                      placeholder="Inches"
+                      placeholderTextColor="#9CA3AF"
+                      keyboardType="numeric"
+                      value={heightInInput}
+                      onChangeText={setHeightInInput}
+                      className="flex-1 border border-gray-700 rounded-lg p-4 text-lg text-white bg-gray-800"
+                    />
+                  </View>
+                )}
+              </View>
+
+              {/* WEIGHT */}
+              <View>
+                <View className="flex-row justify-between items-center mb-2">
+                  <Text className="text-gray-300 font-semibold">Weight</Text>
+                  <View className="flex-row bg-gray-800 rounded-lg overflow-hidden border border-gray-700">
+                    {['kg', 'lbs'].map((unit) => (
+                      <TouchableOpacity
+                        key={unit}
+                        onPress={() => setWeightUnit(unit)}
+                        className={`px-4 py-2 ${weightUnit === unit ? 'bg-blue-400' : ''}`}
+                      >
+                        <Text className={`font-semibold ${weightUnit === unit ? 'text-white' : 'text-gray-400'}`}>
+                          {unit}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+
+                <TextInput
+                  placeholder={`Weight in ${weightUnit}`}
+                  placeholderTextColor="#9CA3AF"
+                  keyboardType="numeric"
+                  value={weightInput}
+                  onChangeText={setWeightInput}
+                  className="border border-gray-700 rounded-lg p-4 text-lg text-white bg-gray-800"
+                />
+              </View>
             </>
           ) : current.options ? (
             current.options.map((opt) => (

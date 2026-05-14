@@ -208,10 +208,14 @@ useEffect(() => {
         <View className="flex-row justify-between items-center px-6 pt-12 pb-4">
           <View className="flex-1">
             <Text className="text-2xl font-bold text-white">Dashboard</Text>
-            <View className="flex-row items-center mt-1">
-              <Text className="text-white text-sm">
-                SwiftPass x {profile?.gym_name || 'Loading...'}
-              </Text>
+  <View className="flex-row items-center mt-1">
+              {profile?.gym_name ? (
+                <Text className="text-white text-sm">
+                  SwiftPass x {profile.gym_name}
+                </Text>
+              ) : (
+                <View className="h-4 w-36 bg-gray-600 rounded-full" />
+              )}
             </View>
           </View>
 
@@ -219,10 +223,12 @@ useEffect(() => {
             onPress={() => setShowProfileModal(true)}
             className="bg-white rounded-2xl shadow-md border border-gray-200"
           >
-            {profile?.profile_image_url ? (
+{profile?.profile_image_url ? (
               <Image
-                source={{ uri: `${getFullPhotoUrl(profile.profile_image_url)}?t=${Date.now()}` }}
-                className="w-14 h-14 rounded-2xl"
+                source={{ uri: getFullPhotoUrl(profile.profile_image_url) }}
+                style={{ width: 56, height: 56, borderRadius: 16 }}
+                resizeMode="cover"
+                onError={(e) => console.log("Image load error:", e.nativeEvent.error)}
               />
             ) : (
               <View className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
