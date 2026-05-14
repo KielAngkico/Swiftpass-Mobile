@@ -878,9 +878,9 @@ return {
   day_title: day.day_title,
   exercises: (exercisesRows || []).map(e => ({
     ...e,
-    image_url: e.image_url
-      ? `${process.env.EXPO_PUBLIC_MEDIA_URL}/${e.image_url.replace(/^\//, "")}`
-      : null,
+image_url: e.image_url
+  ? `https://swiftpasstech.com/uploads/exercises/${e.image_url.replace(/^.*[\\/]/, "")}`
+  : null,
   }))
 };
       })

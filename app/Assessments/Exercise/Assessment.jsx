@@ -481,7 +481,7 @@ style={{ width: 64, height: 64, borderRadius: 8 }}
             </View>
 
             {/* GIF */}
-{console.log("🖼️ GIF URL:", selectedExercise?.image_url ? `https://swiftpasstech.com${selectedExercise.image_url}` : "NO URL")}
+{console.log("🖼️ GIF URL:", selectedExercise?.image_url || "NO URL")}
 {console.log("🔍 Full exercise object:", JSON.stringify(selectedExercise, null, 2))}
 {loadingGif ? (
   <View style={{ width: '100%', height: 280, backgroundColor: '#374151', justifyContent: 'center', alignItems: 'center' }}>
