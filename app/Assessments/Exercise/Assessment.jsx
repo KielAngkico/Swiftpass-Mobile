@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
+  Image,
   TouchableOpacity,
   ScrollView,
   KeyboardAvoidingView,
@@ -14,7 +15,7 @@ import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import API from "../../../backend-api/services/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
+import { Modal } from "react-native";
 const steps = [
   {
     key: "welcome",
@@ -24,16 +25,6 @@ const steps = [
       message: "We'd like to learn more about your training style to give you the best program.",
       button: "Get Started",
     }),
-  },
-  {
-    key: "athlete_level",
-    question: "What athlete level are you?",
-    options: ["Beginner", "Intermediate", "Advanced"],
-  },
-  {
-    key: "cardio",
-    question: "Do you like to include cardio?",
-    options: ["Yes", "No"],
   },
   {
     key: "workout_days",
@@ -79,7 +70,10 @@ export default function ExerciseAssessment() {
   const [splitOptions, setSplitOptions] = useState([]);
   const [reviewExercises, setReviewExercises] = useState([]);
   const [loading, setLoading] = useState(false);
-   const [username, setUsername] = useState(""); 
+const [username, setUsername] = useState("");
+const [gifModalVisible, setGifModalVisible] = useState(false);
+const [selectedExercise, setSelectedExercise] = useState(null);
+const [loadingGif, setLoadingGif] = useState(false);
   const current = steps[step];
   useEffect(() => {
     const fetchUsername = async () => {
@@ -154,14 +148,14 @@ const saveAssessment = async () => {
     const rfid_tag = await AsyncStorage.getItem("rfid_tag");
     console.log("🔑 Loaded from storage:", { memberId, rfid_tag });
 
-    const exerciseData = {
+const exerciseData = {
       member_id: parseInt(memberId, 10),
       rfid_tag,
-      fitness_level: answers.athlete_level?.toLowerCase() || "beginner",
+      fitness_level: "beginner",
       workout_days: Number(answers.workout_days) || null,
       assigned_split_name: answers.split_choice || null,
       coach_notes: null,
-      cardio_preference: answers.cardio ?? "No",
+      cardio_preference: "No",
     };
 
 if (!exerciseData.member_id) {
@@ -378,11 +372,8 @@ if (current.key === "done") {
                   <Text className="text-blue-100 text-center mb-1">
                     <Text className="font-semibold">Split:</Text> {answers.split_choice}
                   </Text>
-                  <Text className="text-blue-100 text-center mb-1">
+<Text className="text-blue-100 text-center">
                     <Text className="font-semibold">Days per week:</Text> {answers.workout_days}
-                  </Text>
-                  <Text className="text-blue-100 text-center">
-                    <Text className="font-semibold">Level:</Text> {answers.athlete_level}
                   </Text>
                 </View>
 
@@ -409,32 +400,53 @@ if (current.key === "done") {
                             <Text className="text-gray-300 text-sm mb-3 text-center">
                               {day.exercises.length} exercises planned
                             </Text>
-                            {day.exercises.map((ex, exIndex) => (
+{day.exercises.map((ex, exIndex) => (
                               <View key={exIndex} className="mb-3 p-3 bg-gray-700 rounded-lg border border-gray-600">
-                                <Text className="text-white font-semibold text-base mb-1">
-                                  {ex.name}
-                                </Text>
-                                
-                                <View className="flex-row justify-between items-center mb-1">
-                                  <Text className="text-gray-300 text-sm">
-                                    {ex.sets ? `${ex.sets} sets` : '3 sets'} × {ex.reps || '6-12 reps'}
-                                  </Text>
-                                  <Text className="text-blue-300 text-sm font-medium">
-                                    {ex.muscle_group}
-                                  </Text>
+                                <View className="flex-row items-center">
+                                  {/* GIF with play overlay */}
+<TouchableOpacity
+onPress={() => {
+  setSelectedExercise(ex);
+  setGifModalVisible(true);
+}}
+  style={{ position: 'relative', width: 64, height: 64, borderRadius: 8, overflow: 'hidden', backgroundColor: '#4B5563' }}
+>
+  <Image
+source={{ uri: ex.image_url || null }}
+style={{ width: 64, height: 64, borderRadius: 8 }}
+    resizeMode="cover"
+  />
+  <View style={{
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    justifyContent: 'center', alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 8,
+  }}>
+    <View style={{ backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 999, width: 28, height: 28, justifyContent: 'center', alignItems: 'center' }}>
+      <Text style={{ color: '#3B82F6', fontSize: 12, marginLeft: 2 }}>▶</Text>
+    </View>
+  </View>
+</TouchableOpacity>
+
+                                  {/* Exercise info */}
+                                  <View className="flex-1 ml-3">
+                                    <Text className="text-white font-semibold text-base mb-1">
+                                      {ex.name}
+                                    </Text>
+                                    <View className="flex-row justify-between items-center mb-1">
+                                      <Text className="text-gray-300 text-sm">
+                                        {ex.sets ? `${ex.sets} sets` : '3 sets'} × {ex.reps || '6-12 reps'}
+                                      </Text>
+                                      <Text className="text-blue-300 text-sm font-medium">
+                                        {ex.muscle_group}
+                                      </Text>
+                                    </View>
+                                    {ex.equipment && (
+                                      <Text className="text-gray-400 text-xs mt-1">
+                                        Equipment: {ex.equipment}
+                                      </Text>
+                                    )}
+                                  </View>
                                 </View>
-
-                                {ex.equipment && (
-                                  <Text className="text-gray-400 text-xs mt-1">
-                                    Equipment: {ex.equipment}
-                                  </Text>
-                                )}
-
-                                {ex.rest_time && (
-                                  <Text className="text-gray-400 text-xs">
-                                    Rest: {ex.rest_time}
-                                  </Text>
-                                )}
                               </View>
                             ))}
                           </View>
@@ -451,7 +463,59 @@ if (current.key === "done") {
             )}
           </View>
         )}
-      </ScrollView>
+</ScrollView>
+
+      {/* GIF Preview Modal */}
+      <Modal visible={gifModalVisible} transparent animationType="fade">
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.85)', padding: 24 }}>
+          <View style={{ backgroundColor: '#1f2937', borderRadius: 16, width: '100%', overflow: 'hidden' }}>
+
+            {/* Header */}
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#374151' }}>
+              <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold', flex: 1 }}>
+                {selectedExercise?.name}
+              </Text>
+              <TouchableOpacity onPress={() => setGifModalVisible(false)}>
+                <Ionicons name="close" size={22} color="#fff" />
+              </TouchableOpacity>
+            </View>
+
+            {/* GIF */}
+{console.log("🖼️ GIF URL:", selectedExercise?.image_url ? `https://swiftpasstech.com${selectedExercise.image_url}` : "NO URL")}
+{console.log("🔍 Full exercise object:", JSON.stringify(selectedExercise, null, 2))}
+{loadingGif ? (
+  <View style={{ width: '100%', height: 280, backgroundColor: '#374151', justifyContent: 'center', alignItems: 'center' }}>
+    <Text style={{ color: '#9ca3af' }}>Loading...</Text>
+  </View>
+) : (
+  <Image
+source={{ uri: selectedExercise?.image_url || null }}    style={{ width: '100%', height: 280, backgroundColor: '#374151' }}
+    resizeMode="contain"
+    onLoad={() => console.log("✅ GIF loaded successfully")}
+    onError={(e) => console.log("❌ GIF failed to load:", e.nativeEvent.error)}
+  />
+)}
+
+            {/* Details */}
+            <View style={{ padding: 16 }}>
+              {selectedExercise?.muscle_group && (
+                <Text style={{ color: '#60a5fa', fontSize: 14, marginBottom: 4 }}>
+                  Muscle: {selectedExercise.muscle_group}
+                </Text>
+              )}
+              {selectedExercise?.equipment && (
+                <Text style={{ color: '#9ca3af', fontSize: 13 }}>
+                  Equipment: {selectedExercise.equipment}
+                </Text>
+              )}
+              <Text style={{ color: '#9ca3af', fontSize: 13, marginTop: 4 }}>
+                {selectedExercise?.sets || 3} sets × {selectedExercise?.reps || '6-12 reps'}
+              </Text>
+            </View>
+
+          </View>
+        </View>
+      </Modal>
 
 <View 
   className="flex-row justify-between items-center p-4 border-t border-gray-700 bg-gray-900"

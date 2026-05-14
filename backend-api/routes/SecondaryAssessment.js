@@ -846,19 +846,20 @@ router.get("/exercise-plan/preview", async (req, res) => {
     const days = await Promise.all(
       daysRows.map(async (day) => {
         const exercisesResult = await db.query(
-          `SELECT 
-             e.id,
-             e.name,
-             e.muscle_group,
-             e.equipment,
-             e.instructions,
-             e.level,
-             e.exercise_type,
-             sde.order_index
-           FROM SplitDayExercises sde
-           JOIN ExerciseLibrary e ON sde.exercise_id = e.id
-           WHERE sde.split_day_id = ?
-           ORDER BY sde.order_index ASC`,
+         `SELECT 
+   e.id,
+   e.name,
+   e.muscle_group,
+   e.equipment,
+   e.instructions,
+   e.level,
+   e.exercise_type,
+   e.image_url,
+   sde.order_index
+ FROM SplitDayExercises sde
+ JOIN ExerciseLibrary e ON sde.exercise_id = e.id
+ WHERE sde.split_day_id = ?
+ ORDER BY sde.order_index ASC`,
           [day.day_id]
         );
 
@@ -872,12 +873,16 @@ router.get("/exercise-plan/preview", async (req, res) => {
         } else {
           exercisesRows = [];
         }
-
-        return {
-          day_number: day.day_number,
-          day_title: day.day_title,
-          exercises: exercisesRows || []
-        };
+return {
+  day_number: day.day_number,
+  day_title: day.day_title,
+  exercises: (exercisesRows || []).map(e => ({
+    ...e,
+    image_url: e.image_url
+      ? `${process.env.EXPO_PUBLIC_MEDIA_URL}/${e.image_url.replace(/^\//, "")}`
+      : null,
+  }))
+};
       })
     );
 
