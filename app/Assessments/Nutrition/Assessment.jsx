@@ -460,21 +460,23 @@ router.push({
                 }`}>
                   {dietType}
                 </Text>
-                {dietType === "Balanced" && (
-                  <Text className="text-gray-400 text-sm text-center mt-1">
-                    Includes all food groups including meats
-                  </Text>
-                )}
-                {dietType === "Vegetarian" && (
-                  <Text className="text-gray-400 text-sm text-center mt-1">
-                    No meat options will be shown
-                  </Text>
-                )}
-                {dietType === "No Red Meat" && (
-                  <Text className="text-gray-400 text-sm text-center mt-1">
-                    Fish and poultry only, no red meat
-                  </Text>
-                )}
+{dietType === "Balanced" && (
+  <Text className="text-blue-100 text-sm text-center mt-1">
+    Includes all food groups including meats
+  </Text>
+)}
+
+{dietType === "Vegetarian" && (
+  <Text className="text-blue-100 text-sm text-center mt-1">
+    No meat options will be shown
+  </Text>
+)}
+
+{dietType === "No Red Meat" && (
+  <Text className="text-blue-100 text-sm text-center mt-1">
+    Fish and poultry only, no red meat
+  </Text>
+)}
               </TouchableOpacity>
             ))}
           </View>
@@ -550,13 +552,13 @@ router.push({
       </ScrollView>
       <Modal visible={modalVisible} transparent={true} animationType="slide">
         <View className="flex-1 justify-center items-center bg-black/50">
-          <View className="bg-white p-6 rounded-lg w-11/12 max-h-4/5">
-            <View className="flex-row justify-between items-center mb-4">
-              <Text className="text-xl font-bold flex-1">{modalFoodGroup} Options</Text>
-              <TouchableOpacity
+<View className="bg-gray-900 p-6 rounded-lg w-11/12 max-h-4/5 border border-gray-700">  
+          <View className="flex-row justify-between items-center mb-4">
+<Text className="text-xl font-bold flex-1 text-white">
+  {modalFoodGroup} Options
+</Text>              <TouchableOpacity
                 onPress={() => setModalVisible(false)}
-                className="w-8 h-8 rounded-full bg-gray-200 justify-center items-center"
-              >
+className="w-8 h-8 rounded-full bg-gray-800 justify-center items-center"              >
                 <Ionicons name="close" size={20} color="#666" />
               </TouchableOpacity>
             </View>
@@ -568,22 +570,24 @@ router.push({
               renderItem={({ item }) => (
                 <TouchableOpacity
                   onPress={() => setModalSelected(item.id)}
-                  className={`p-4 rounded-lg mb-2 border ${
-                    modalSelected === item.id 
-                      ? "border-blue-600 bg-blue-50" 
-                      : "border-gray-200 bg-gray-50"
-                  }`}
+className={`p-4 rounded-lg mb-2 border ${
+  modalSelected === item.id 
+    ? "border-blue-400 bg-gray-800"
+    : "border-gray-800 bg-gray-900"
+}`}
                 >
-                  <Text className={`font-semibold ${modalSelected === item.id ? 'text-blue-800' : 'text-gray-800'}`}>
-                    {item.name}
-                  </Text>
+<Text className={`font-semibold ${
+  modalSelected === item.id ? "text-white" : "text-white"
+}`}>
+  {item.name}
+</Text>
                   {item.nutritional_info && (
                     <Text className="text-gray-600 text-sm mt-1">
                       {item.nutritional_info.calories ? `${item.nutritional_info.calories} cal per serving` : 'Nutritional info available'}
                     </Text>
                   )}
                   {item.description && (
-                    <Text className="text-gray-500 text-xs mt-1">{item.description}</Text>
+                    <Text className="text-gray-400 text-xs mt-1">{item.description}</Text>
                   )}
                 </TouchableOpacity>
               )}
@@ -592,7 +596,7 @@ router.push({
             <View className="flex-row justify-end mt-4 space-x-2">
               <TouchableOpacity
                 onPress={() => setModalVisible(false)}
-                className="bg-gray-400 px-6 py-3 rounded-lg"
+                className="bg-gray-800 px-6 py-3 rounded-lg border border-gray-700"
               >
                 <Text className="text-white font-bold">Cancel</Text>
               </TouchableOpacity>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, ActivityIndicator, Alert, TouchableOpacity, Platform } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Modal } from 'react-native';
+import { Calendar } from 'react-native-calendars';import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import NavigationBar from '../../components/NavigationBar';
 import SimpleHeader from '../../components/SimpleHeader';
@@ -86,7 +86,7 @@ useEffect(() => {
       <SimpleHeader title="Activity History" />
 <View className="px-4 pt-3 pb-2 bg-gray-900">
 <TouchableOpacity
-    onPress={() => setShowDatePicker(true)}
+    onPress={() => setShowDatePicker(!showDatePicker)}
     className="bg-gray-800 rounded-xl px-4 py-3 mb-3 border border-gray-700 flex-row justify-between items-center"
   >
     <Text className={selectedDate ? 'text-white' : 'text-gray-500'}>
@@ -100,18 +100,65 @@ useEffect(() => {
       </TouchableOpacity>
     )}
   </TouchableOpacity>
-  {showDatePicker && (
-    <DateTimePicker
-      value={selectedDate || new Date()}
-      mode="date"
-      display={Platform.OS === 'ios' ? 'inline' : 'default'}
-      onChange={(event, date) => {
-        setShowDatePicker(false);
-        if (date) setSelectedDate(date);
-      }}
-    />
-  )}
 
+<Modal
+  visible={showDatePicker}
+  transparent
+  animationType="fade"
+  onRequestClose={() => setShowDatePicker(false)}
+>
+  <View className="flex-1 bg-black/30 justify-center items-center px-6">
+    
+    <View className="bg-gray-800 rounded-3xl p-4 border border-gray-700 w-full">
+
+      {/* Header */}
+      <View className="flex-row justify-between items-center mb-4">
+        <Text className="text-white text-lg font-bold">
+          Select Date
+        </Text>
+
+        <Text
+          onPress={() => setShowDatePicker(false)}
+          className="text-red-400 font-semibold"
+        >
+          Close
+        </Text>
+      </View>
+
+      {/* Calendar */}
+      <Calendar
+        theme={{
+          backgroundColor: '#1f2937',
+          calendarBackground: '#1f2937',
+
+          textSectionTitleColor: '#9ca3af',
+          monthTextColor: '#ffffff',
+          dayTextColor: '#ffffff',
+          todayTextColor: '#3b82f6',
+
+          selectedDayBackgroundColor: '#2563eb',
+          selectedDayTextColor: '#ffffff',
+
+          arrowColor: '#3b82f6',
+          textDisabledColor: '#4b5563',
+        }}
+        markedDates={
+          selectedDate
+            ? {
+                [selectedDate.toISOString().split('T')[0]]: {
+                  selected: true,
+                },
+              }
+            : {}
+        }
+        onDayPress={(day) => {
+          setSelectedDate(new Date(day.timestamp));
+          setShowDatePicker(false);
+        }}
+      />
+    </View>
+  </View>
+</Modal>
 </View>
       <FlatList
         data={logs}

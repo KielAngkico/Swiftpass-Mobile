@@ -306,31 +306,36 @@ return (
             </Text>
             
             {/* Simple Days Countdown */}
-          {(() => {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const expiryDate = new Date(subscriptionExpiry);
-            expiryDate.setHours(0, 0, 0, 0);
-            const daysLeft = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
-            
-            // Only show when 7 days or less
-            if (daysLeft >= 0 && daysLeft <= 7 && profile?.status === 'active') {
-              return (
-                <Text className="text-yellow-400 text-sm mt-2">
-                  {daysLeft === 0 
-                    ? '🟠 Expires today!' 
-                    : `🟡 ${daysLeft} ${daysLeft === 1 ? 'day' : 'days'} left`}
-                </Text>
-              );
-            } else if (profile?.status === 'inactive') {
-              return (
-                <Text className="text-red-400 text-sm mt-2">
-                   🔴 Membership has expired
-                </Text>
-              );
-            }
-            return null; // Hide if more than 7 days
-          })()}
+{(() => {
+  if (!subscriptionExpiry) return null;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const expiryDate = new Date(subscriptionExpiry);
+  expiryDate.setHours(0, 0, 0, 0);
+  const daysLeft = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
+
+  if (daysLeft < 0) {
+    return (
+      <Text className="text-red-400 text-sm mt-2">
+        🔴 Expired on {expiryDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+      </Text>
+    );
+  } else if (daysLeft === 0) {
+    return (
+      <Text className="text-orange-400 text-sm mt-2">
+        🟠 Expires today!
+      </Text>
+    );
+  } else if (daysLeft <= 7) {
+    return (
+      <Text className="text-yellow-400 text-sm mt-2">
+        🟡 {daysLeft} {daysLeft === 1 ? 'day' : 'days'} left before expiry
+      </Text>
+    );
+  }
+  return null;
+})()}
           </View>
         ) : (
           <Text className="text-gray-400 text-lg">No active subscription</Text>

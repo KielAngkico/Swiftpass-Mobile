@@ -288,7 +288,15 @@ return (
               >
                 {opt.label}: {opt.calories} kcal
               </Text>
-              <Text className="text-gray-400 text-sm">{opt.desc}</Text>
+              <Text
+  className={`text-sm ${
+    formData.calories_target === opt.calories
+      ? 'text-blue-100'
+      : 'text-gray-400'
+  }`}
+>
+  {opt.desc}
+</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -453,7 +461,17 @@ return (
                 >
                   {opt.label || opt}
                 </Text>
-                {opt.info && <Text className="text-sm text-gray-400 mt-1">{opt.info}</Text>}
+                {opt.info && (
+  <Text
+    className={`text-sm mt-1 ${
+      formData[current.key] === (opt.label || opt).toLowerCase()
+        ? 'text-blue-100'
+        : 'text-gray-400'
+    }`}
+  >
+    {opt.info}
+  </Text>
+)}
               </TouchableOpacity>
             ))
           ) : current.input ? (

@@ -294,13 +294,34 @@ useEffect(() => {
               })()}
             </View>
 
-            {loading ? (
-              <ActivityIndicator size="small" color="#3b82f6" />
-            ) : (
-              <Text className="text-2xl font-bold text-green-500">
-                ₱{parseFloat(balance).toFixed(2)}
-              </Text>
-            )}
+{loading ? (
+  <ActivityIndicator size="small" color="#3b82f6" />
+) : (
+  <>
+    <Text className="text-2xl font-bold text-green-500">
+      ₱{parseFloat(balance).toFixed(2)}
+    </Text>
+    {(() => {
+      const bal = parseFloat(profile?.current_balance || 0);
+      const fee = parseFloat(profile?.session_fee || 0);
+
+      if (bal <= 0) {
+        return (
+          <Text className="text-red-400 text-sm mt-2">
+            🔴 No balance — entry not allowed
+          </Text>
+        );
+      } else if (fee > 0 && bal < fee) {
+        return (
+          <Text className="text-yellow-400 text-sm mt-2">
+            🟡 Insufficient for next session (₱{fee.toFixed(2)} required)
+          </Text>
+        );
+      }
+      return null;
+    })()}
+  </>
+)}
           </View>
 
           <View className="bg-gray-700 border border-gray-100 rounded-2xl p-6 mb-6">

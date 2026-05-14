@@ -29,7 +29,7 @@ const steps = [
   {
     key: "workout_days",
     question: "How often do you plan to work out per week?",
-    options: ["1", "2", "3", "4", "5", "6", "7"],
+    options: ["1", "2", "3", "4", "5", "6"],
   },
   {
     key: "split_choice",
@@ -329,29 +329,31 @@ if (current.key === "done") {
             </TouchableOpacity>
           ))}
 
-        {!current.type &&
-          current.key !== "split_choice" &&
-          current.options?.map((opt) => (
-            <TouchableOpacity
-              key={opt}
-              className={`py-4 px-4 rounded-lg mb-3 border ${
-                answers[current.key] === opt
-                  ? "bg-blue-400 border-blue-400"
-                  : "bg-gray-800 border-gray-700"
-              }`}
-              onPress={() => handleSelect(current.key, opt)}
-              disabled={loading}
-            >
-              <Text
-                className={`font-semibold text-lg ${
-                  answers[current.key] === opt ? "text-white" : "text-gray-200"
-                }`}
-              >
-                {String(opt)}
-              </Text>
-            </TouchableOpacity>
-          ))}
-
+  {!current.type &&
+  current.key !== "split_choice" &&
+  current.key === "workout_days" && (
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }}>
+      {current.options?.map((opt) => (
+        <TouchableOpacity
+          key={opt}
+          onPress={() => handleSelect(current.key, opt)}
+          disabled={loading}
+          style={{
+            width: '30%', aspectRatio: 1, margin: '1.5%',
+            borderRadius: 12, justifyContent: 'center', alignItems: 'center',
+            backgroundColor: answers[current.key] === opt ? '#60a5fa' : '#1f2937',
+            borderWidth: 1,
+            borderColor: answers[current.key] === opt ? '#60a5fa' : '#374151',
+          }}
+        >
+          <Text style={{ color: '#fff', fontSize: 28, fontWeight: '700' }}>{opt}</Text>
+          <Text style={{ color: answers[current.key] === opt ? '#bfdbfe' : '#6b7280', fontSize: 11, marginTop: 4 }}>
+            {opt === "1" ? "day/week" : "days/week"}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  )}
         {current.key === "review_exercises" && (
           <View>
             {loading ? (

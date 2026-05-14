@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, ActivityIndicator, Alert, ScrollView, TouchableOpacity, Platform } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import {
+  View,
+  Text,
+  FlatList,
+  ActivityIndicator,
+  Alert,
+  TouchableOpacity,
+  Modal,
+} from 'react-native';import { Calendar } from 'react-native-calendars';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import NavigationBar from '../../components/NavigationBar';
 import SimpleHeader from '../../components/SimpleHeader';
@@ -81,7 +88,7 @@ const labelText = entry.label;
 
         return (
           <View key={entry.transaction_id || `entry-${idx}`} className="mx-4 my-2">
-            <View className="bg-gray-800 border border-gray-100 rounded-xl px-4 py-3 shadow-sm">
+            <View className="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 shadow-sm">
               {/* First Row: Label and Amount */}
               <View className="flex-row justify-between items-center">
                 <Text className="text-white text-base font-semibold flex-1">{labelText}</Text>
@@ -126,9 +133,9 @@ useEffect(() => {
 return (
     <View className="flex-1 bg-gray-900">
       <SimpleHeader title="Transaction History" />
-      <View className="px-4 pt-3 pb-2 bg-gray-900">
+      <View className="px-4 pt-6 pb-2 bg-gray-900">
 <TouchableOpacity
-    onPress={() => setShowDatePicker(true)}
+    onPress={() => setShowDatePicker(!showDatePicker)}
     className="bg-gray-800 rounded-xl px-4 py-3 mb-3 border border-gray-700 flex-row justify-between items-center"
   >
     <Text className={selectedDate ? 'text-white' : 'text-gray-500'}>
@@ -136,26 +143,79 @@ return (
         ? selectedDate.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
         : 'Filter by date...'}
     </Text>
-    {selectedDate && (
-      <TouchableOpacity onPress={() => setSelectedDate(null)}>
-        <Text className="text-red-400 text-sm">Clear</Text>
-      </TouchableOpacity>
-    )}
+{selectedDate && (
+  <Text
+    onPress={() => setSelectedDate(null)}
+    className="text-red-400 text-sm"
+  >
+    Clear
+  </Text>
+)}
   </TouchableOpacity>
-  {showDatePicker && (
-    <DateTimePicker
-      value={selectedDate || new Date()}
-      mode="date"
-      display={Platform.OS === 'ios' ? 'inline' : 'default'}
-      onChange={(event, date) => {
-        setShowDatePicker(false);
-        if (date) setSelectedDate(date);
-      }}
-    />
-  )}
+
 
 </View>
+<Modal
+  visible={showDatePicker}
+  transparent
+  animationType="fade"
+  onRequestClose={() => setShowDatePicker(false)}
+>
+  <View className="flex-1 bg-black/30 justify-center items-center px-6">
+    <View className="bg-gray-800 rounded-3xl p-4 border border-gray-700 w-full">
+      
+      {/* Header */}
+      <View className="flex-row justify-between items-center mb-4">
+        <Text className="text-white text-lg font-bold">
+          Select Date
+        </Text>
 
+        <Text
+          onPress={() => setShowDatePicker(false)}
+          className="text-red-400 font-semibold"
+        >
+          Close
+        </Text>
+      </View>
+
+      {/* Calendar */}
+      <Calendar
+        theme={{
+          backgroundColor: '#1f2937',
+          calendarBackground: '#1f2937',
+
+          textSectionTitleColor: '#9ca3af',
+          monthTextColor: '#ffffff',
+          dayTextColor: '#ffffff',
+          todayTextColor: '#3b82f6',
+
+          selectedDayBackgroundColor: '#2563eb',
+          selectedDayTextColor: '#ffffff',
+
+          arrowColor: '#3b82f6',
+
+          textDisabledColor: '#4b5563',
+
+          dotColor: '#3b82f6',
+          selectedDotColor: '#ffffff',
+        }}
+        markedDates={
+          selectedDate
+            ? {
+                [selectedDate.toISOString().split('T')[0]]: {
+                  selected: true,
+                },
+              }
+            : {}
+        }
+        onDayPress={(day) => {
+          setSelectedDate(new Date(day.timestamp));
+          setShowDatePicker(false);
+        }}
+      />
+    </View>
+  </View>
+</Modal>
       {transactions.length === 0 ? (
         <View className="flex-1 justify-center items-center">
           <Text className="text-lg font-bold text-gray-400">
