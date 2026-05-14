@@ -43,9 +43,9 @@ const [adminRows] = await db.query(
   `SELECT gym_name FROM AdminAccounts WHERE id = ? LIMIT 1`,
   [user.admin_id]
 );
-console.log("Admin rows:", adminRows);
-const gymName = adminRows?.[0]?.gym_name || null;
-console.log("Gym name:", gymName);
+const gymName = Array.isArray(adminRows) 
+  ? adminRows?.[0]?.gym_name || null
+  : adminRows?.gym_name || null;
 
     let imagePath = user.profile_image_url && user.profile_image_url.trim() !== ''
       ? user.profile_image_url.trim()
