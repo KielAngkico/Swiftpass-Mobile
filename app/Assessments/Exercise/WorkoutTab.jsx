@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, Image, Modal, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, Modal, ScrollView } from "react-native";
+import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import API from "../../../backend-api/services/api";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -327,6 +328,7 @@ const pickCardio = async (exercise) => {
                 </Text>
                 {exercises.map((exercise, index) => {
                   const imageUrl = getFullPhotoUrl(exercise.image_url);
+console.log("🖼️ Workout tab image URL:", imageUrl);
                   
                   return (
                     <TouchableOpacity

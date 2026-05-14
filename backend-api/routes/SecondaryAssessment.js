@@ -1129,9 +1129,9 @@ router.get("/results-routes/:member_id", async (req, res) => {
         level: e.level,
         exercise_type: e.exercise_type,
         order_index: e.order_index,
-        image_url: e.image_url
-          ? `${process.env.EXPO_PUBLIC_MEDIA_URL}/${e.image_url.replace(/^\//, "")}`
-          : null,
+image_url: e.image_url
+  ? `https://swiftpasstech.com/uploads/exercises/${e.image_url.replace(/^.*[\\/]/, "")}`
+  : null,
       }));
     }
 
