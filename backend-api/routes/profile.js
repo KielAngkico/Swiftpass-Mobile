@@ -47,11 +47,14 @@ const gymName = Array.isArray(adminRows)
   ? adminRows?.[0]?.gym_name || null
   : adminRows?.gym_name || null;
 
+console.log("admin_id type:", typeof user.admin_id, "value:", user.admin_id);
+
 const [feeRows] = await db.query(
   `SELECT amount_to_pay FROM AdminPricingOptions 
    WHERE admin_id = ? AND plan_name = 'Daily Session' AND is_active = 1 LIMIT 1`,
   [user.admin_id]
 );
+console.log("Fee rows result:", JSON.stringify(feeRows));
 const sessionFee = feeRows?.[0]?.amount_to_pay || 0;
   
     let imagePath = user.profile_image_url && user.profile_image_url.trim() !== ''
