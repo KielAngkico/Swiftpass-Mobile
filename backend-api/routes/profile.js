@@ -55,7 +55,9 @@ const [feeRows] = await db.query(
   [user.admin_id]
 );
 console.log("Fee rows result:", JSON.stringify(feeRows));
-const sessionFee = feeRows?.[0]?.amount_to_pay || 0;
+const sessionFee = Array.isArray(feeRows) 
+  ? feeRows?.[0]?.amount_to_pay || 0
+  : feeRows?.amount_to_pay || 0;
   
     let imagePath = user.profile_image_url && user.profile_image_url.trim() !== ''
       ? user.profile_image_url.trim()
