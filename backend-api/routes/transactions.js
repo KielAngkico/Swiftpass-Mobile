@@ -17,16 +17,16 @@ const { member_id, rfid_tag, system_type } = req.query;
     if (system_type === 'prepaid_entry') {
       // ✅ Get tap-ups and new member activations
 const [tapUps] = await pool.query(
-        `SELECT amount, timestamp, transaction_type, subscription_type 
-         FROM AdminMembersTransactions 
-         WHERE member_id = ? 
-           AND transaction_type IN ('new_member', 'top_up', 'rfid_replacement')`,
-        [member_id]
-      );
+  `SELECT id, amount, timestamp, transaction_type, subscription_type 
+   FROM AdminMembersTransactions 
+   WHERE member_id = ? 
+     AND transaction_type IN ('new_member', 'top_up', 'rfid_replacement')`,
+  [member_id]
+);
 
 tapUps.forEach(row => {
         finalList.push({
-          transaction_id: null,
+          transaction_id: row.id,
           label: row.transaction_type === 'new_member' ? 'Activation' 
      : row.transaction_type === 'rfid_replacement' ? 'RFID Replacement' 
      : 'Tap Up',

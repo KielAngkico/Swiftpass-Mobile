@@ -308,7 +308,7 @@ useEffect(() => {
       if (bal <= 0) {
         return (
           <Text className="text-red-400 text-sm mt-2">
-            🔴 No balance — entry not allowed
+            🔴 No balance 
           </Text>
         );
       } else if (fee > 0 && bal < fee) {
