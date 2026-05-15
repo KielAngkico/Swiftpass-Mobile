@@ -25,17 +25,19 @@ const [tapUps] = await pool.query(
 );
 
 tapUps.forEach(row => {
-        finalList.push({
-          transaction_id: row.id,
-          label: row.transaction_type === 'new_member' ? 'Activation' 
-     : row.transaction_type === 'rfid_replacement' ? 'RFID Replacement' 
-     : 'Tap Up',
-          amount: Number(row.amount),
-          timestamp: row.timestamp,
-          subscription_type: row.subscription_type || null,
-          transaction_type: row.transaction_type, // ✅ added
-        });
-      });
+  const label = row.transaction_type === 'new_member' ? 'Activation'
+    : row.transaction_type === 'rfid_replacement' ? 'RFID Replacement'
+    : row.subscription_type ? `Tap Up: ${row.subscription_type}` : 'Tap Up';
+
+  finalList.push({
+    transaction_id: row.id,
+    label,
+    amount: Number(row.amount),
+    timestamp: row.timestamp,
+    subscription_type: row.subscription_type || null,
+    transaction_type: row.transaction_type,
+  });
+});
 
       // ✅ FIXED: Only get entries where deducted_amount > 0 (exclude grace period)
 const [entries] = await pool.query(
@@ -72,9 +74,9 @@ const [subs] = await pool.query(
       );
 
 subs.forEach(row => {
-  const label = row.transaction_type === 'new_member' ? 'Membership Fee' 
-    : row.transaction_type === 'rfid_replacement' ? 'RFID Replacement' 
-    : 'Subscription Renewal';
+  const label = row.transaction_type === 'new_member' ? 'Membership Fee'
+    : row.transaction_type === 'rfid_replacement' ? 'RFID Replacement'
+    : row.subscription_type ? `Subscription Renewal: ${row.subscription_type}` : 'Subscription Renewal';
 
   finalList.push({
     transaction_id: null,
@@ -82,7 +84,7 @@ subs.forEach(row => {
     amount: Number(row.amount),
     timestamp: row.timestamp,
     subscription_type: row.subscription_type || null,
-    transaction_type: row.transaction_type, // ✅ also add this — your frontend uses it
+    transaction_type: row.transaction_type,
   });
 });
 
