@@ -1,0 +1,7 @@
+backend-api
+node_modules
+uploads
+.git
+android/.gradle
+android/build
+android/app/build

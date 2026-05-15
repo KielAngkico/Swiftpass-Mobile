@@ -98,11 +98,11 @@ const labelText = entry.label;
               {/* Second Row: Time and Transaction ID */}
               <View className="flex-row justify-between items-center mt-2">
                 <Text className="text-gray-400 text-sm">{formatTime(entry.timestamp)}</Text>
-                {entry.transaction_id ? (
-                  <Text className="text-gray-400 text-xs">Transaction ID: {entry.transaction_id}</Text>
-                ) : (
-                  <Text className="text-gray-400 text-xs">Entry Log</Text>
-                )}
+ {entry.transaction_type === 'gym_entry' ? (
+  <Text className="text-gray-400 text-xs">Entry Log</Text>
+) : entry.transaction_id ? (
+  <Text className="text-gray-400 text-xs">Transaction ID: {entry.transaction_id}</Text>
+) : null}
               </View>
             </View>
           </View>

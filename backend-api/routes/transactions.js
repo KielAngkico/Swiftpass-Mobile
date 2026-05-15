@@ -72,21 +72,19 @@ const [subs] = await pool.query(
       );
 
 subs.forEach(row => {
-  const labelBase = row.transaction_type === 'new_member' ? 'Membership Fee' 
+  const label = row.transaction_type === 'new_member' ? 'Membership Fee' 
     : row.transaction_type === 'rfid_replacement' ? 'RFID Replacement' 
-    : 'Subscription';
-  const label = row.subscription_type && row.transaction_type !== 'new_member' 
-    ? `${labelBase}: ${row.subscription_type}` 
-    : labelBase;
+    : 'Subscription Renewal';
 
-        finalList.push({
-          transaction_id: null,
-          label,
-          amount: Number(row.amount),
-          timestamp: row.timestamp,
-          subscription_type: row.subscription_type || null
-        });
-      });
+  finalList.push({
+    transaction_id: null,
+    label,
+    amount: Number(row.amount),
+    timestamp: row.timestamp,
+    subscription_type: row.subscription_type || null,
+    transaction_type: row.transaction_type, // ✅ also add this — your frontend uses it
+  });
+});
 
     } else {
       return res.status(400).json({ message: 'Invalid system_type' });
