@@ -17,7 +17,7 @@ const { member_id, rfid_tag, system_type } = req.query;
     if (system_type === 'prepaid_entry') {
       // ✅ Get tap-ups and new member activations
 const [tapUps] = await pool.query(
-  `SELECT id, amount, timestamp, transaction_type, subscription_type 
+  `SELECT id, amount, balance_added, timestamp, transaction_type, subscription_type 
    FROM AdminMembersTransactions 
    WHERE member_id = ? 
      AND transaction_type IN ('new_member', 'top_up', 'rfid_replacement')`,
@@ -25,14 +25,28 @@ const [tapUps] = await pool.query(
 );
 
 tapUps.forEach(row => {
-  const label = row.transaction_type === 'new_member' ? 'Activation'
-    : row.transaction_type === 'rfid_replacement' ? 'RFID Replacement'
-    : row.subscription_type ? `Tap Up: ${row.subscription_type}` : 'Tap Up';
+  let label = '';
+  let displayAmount = Number(row.amount);
+
+  if (row.transaction_type === 'new_member') {
+    label = 'Membership Fee';
+  } 
+  else if (row.transaction_type === 'rfid_replacement') {
+    label = 'RFID Replacement';
+  } 
+  else if (row.transaction_type === 'top_up') {
+    label = row.subscription_type
+      ? `Top Up - ${row.subscription_type}`
+      : 'Top Up';
+
+    // show credited balance instead of payment amount
+    displayAmount = Number(row.balance_added || row.amount);
+  }
 
   finalList.push({
     transaction_id: row.id,
     label,
-    amount: Number(row.amount),
+    amount: displayAmount,
     timestamp: row.timestamp,
     subscription_type: row.subscription_type || null,
     transaction_type: row.transaction_type,
