@@ -45,8 +45,8 @@ return {
   id: entry.id,
   full_name: entry.full_name,
   label: `Visited ${gymName} Gym`,
-  timestamp: new Date(entry.entry_time).toISOString(),
-  exit_time: entry.exit_time ? new Date(entry.exit_time).toISOString() : null, // 👈 add this
+timestamp: entry.entry_time,
+exit_time: entry.exit_time || null,
   type: 'entry',
   admin_id: entry.admin_id,
 };

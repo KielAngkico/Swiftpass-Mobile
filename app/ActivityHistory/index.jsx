@@ -30,8 +30,8 @@ const [loading, setLoading] = useState(true);
     return Object.entries(grouped).map(([date, entries]) => ({ date, entries }));
   };
 
-  const formatTime = (dateStr) =>
-    new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+const formatTime = (dateStr) =>
+  new Date(dateStr).toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Manila' });
 
   useEffect(() => {
     const fetchLogs = async () => {
