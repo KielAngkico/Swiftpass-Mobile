@@ -45,8 +45,8 @@ return {
   id: entry.id,
   full_name: entry.full_name,
   label: `Visited ${gymName} Gym`,
-timestamp: entry.entry_time ? entry.entry_time.toString().replace('T', ' ').replace('Z', '') + '+08:00' : null,
-exit_time: entry.exit_time ? entry.exit_time.toString().replace('T', ' ').replace('Z', '') + '+08:00' : null,
+timestamp: new Date(entry.entry_time).toISOString(),
+exit_time: entry.exit_time ? new Date(entry.exit_time).toISOString() : null,
   type: 'entry',
   admin_id: entry.admin_id,
 };

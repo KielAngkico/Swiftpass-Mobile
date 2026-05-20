@@ -42,7 +42,8 @@ try {
           `/transactions/activity-history?member_id=${resolvedMemberId}&system_type=${system_type}&admin_id=${admin_id}`
         );
         const activities = res.data.activities || [];
-        const mapped = activities.map((item) => ({
+        console.log('RAW activities:', JSON.stringify(activities));
+const mapped = activities.map((item) => ({
           ...item,
           label: item.label || `Visited ${item.gym_name} Gym`,
           timestamp: item.timestamp || item.entry_time,
