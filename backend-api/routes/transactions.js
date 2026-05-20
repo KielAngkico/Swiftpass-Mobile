@@ -47,7 +47,7 @@ tapUps.forEach(row => {
     transaction_id: row.id,
     label,
     amount: displayAmount,
-    timestamp: row.timestamp,
+    timestamp: row.timestamp ? row.timestamp.toString().replace('T', ' ').replace('Z', '') + '+08:00' : null,
     subscription_type: row.subscription_type || null,
     transaction_type: row.transaction_type,
   });
