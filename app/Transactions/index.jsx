@@ -7,7 +7,9 @@ import {
   Alert,
   TouchableOpacity,
   Modal,
-} from 'react-native';import { Calendar } from 'react-native-calendars';
+  TextInput,
+} from 'react-native';
+import { Calendar } from 'react-native-calendars';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import NavigationBar from '../../components/NavigationBar';
 import SimpleHeader from '../../components/SimpleHeader';
@@ -20,6 +22,10 @@ const [selectedDate, setSelectedDate] = useState(null);
 const [showDatePicker, setShowDatePicker] = useState(false);
 const [allTransactions, setAllTransactions] = useState([]);
 const [loading, setLoading] = useState(true);
+const [reportingId, setReportingId] = useState(null);
+const [reportReason, setReportReason] = useState('');
+const [showReportModal, setShowReportModal] = useState(false);
+const [selectedTransaction, setSelectedTransaction] = useState(null);
 
   const groupByDate = (items) => {
     const grouped = {};
@@ -54,6 +60,55 @@ setTransactions(groupByDate(items));
 
     fetchTransactions();
   }, [member_id, system_type]);
+  const handleReport = (entry) => {
+    setSelectedTransaction(entry);
+    setReportReason('');
+    setShowReportModal(true);
+  };
+
+  const submitReport = async () => {
+    if (!selectedTransaction) return;
+    setReportingId(selectedTransaction.transaction_id);
+    try {
+      const resolvedMemberId = member_id || await AsyncStorage.getItem('member_id');
+      const resolvedAdminId = admin_id || await AsyncStorage.getItem('admin_id');
+
+      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/refunds/request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          member_id: resolvedMemberId,
+          admin_id: resolvedAdminId,
+          member_transaction_id: selectedTransaction.transaction_id,
+          amount: Math.abs(selectedTransaction.amount),
+          reason: reportReason || null,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        Alert.alert('Error', data.error || 'Failed to submit refund request');
+        return;
+      }
+
+      // Update local state so button disappears immediately
+      setAllTransactions(prev =>
+        prev.map(t =>
+          t.transaction_id === selectedTransaction.transaction_id
+            ? { ...t, refund_status: 'pending' }
+            : t
+        )
+      );
+
+      setShowReportModal(false);
+      Alert.alert('Submitted', 'Your refund request has been submitted.');
+    } catch (err) {
+      Alert.alert('Error', 'Failed to submit refund request');
+    } finally {
+      setReportingId(null);
+    }
+  };
 
   const formatTime = (dateStr) =>
     new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -95,15 +150,45 @@ const labelText = entry.label;
                 <Text className={`text-base font-bold ${amountColorClass}`}>{amountText}</Text>
               </View>
               
-              {/* Second Row: Time and Transaction ID */}
+{/* Second Row: Time and Transaction ID */}
               <View className="flex-row justify-between items-center mt-2">
                 <Text className="text-gray-400 text-sm">{formatTime(entry.timestamp)}</Text>
- {entry.transaction_type === 'gym_entry' ? (
-  <Text className="text-gray-400 text-xs">Entry Log</Text>
-) : entry.transaction_id ? (
-  <Text className="text-gray-400 text-xs">Transaction ID: {entry.transaction_id}</Text>
-) : null}
+                {entry.transaction_type === 'gym_entry' ? (
+                  <Text className="text-gray-400 text-xs">Entry Log</Text>
+                ) : entry.transaction_id ? (
+                  <Text className="text-gray-400 text-xs">Transaction ID: {entry.transaction_id}</Text>
+                ) : null}
               </View>
+
+              {/* Refund status or report button — gym_entry only */}
+              {entry.transaction_type === 'gym_entry' && (
+                <View className="mt-2">
+                  {entry.refund_status === 'pending' && (
+                    <View className="bg-yellow-900 border border-yellow-600 rounded-lg px-3 py-1 self-start">
+                      <Text className="text-yellow-400 text-xs">Refund Pending</Text>
+                    </View>
+                  )}
+                  {entry.refund_status === 'approved' && (
+                    <View className="bg-green-900 border border-green-600 rounded-lg px-3 py-1 self-start">
+                      <Text className="text-green-400 text-xs">Refunded</Text>
+                    </View>
+                  )}
+                  {entry.refund_status === 'denied' && (
+                    <View className="bg-red-900 border border-red-600 rounded-lg px-3 py-1 self-start">
+                      <Text className="text-red-400 text-xs">Refund Denied</Text>
+                    </View>
+                  )}
+                  {!entry.refund_status && (
+                    <TouchableOpacity
+                      onPress={() => handleReport(entry)}
+                      disabled={reportingId === entry.transaction_id}
+                      className="bg-gray-700 border border-gray-500 rounded-lg px-3 py-1 self-start"
+                    >
+                      <Text className="text-gray-300 text-xs">Report</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              )}
             </View>
           </View>
         );
@@ -216,6 +301,49 @@ return (
     </View>
   </View>
 </Modal>
+<Modal
+        visible={showReportModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowReportModal(false)}
+      >
+        <View className="flex-1 bg-black/50 justify-center items-center px-6">
+          <View className="bg-gray-800 rounded-3xl p-5 border border-gray-700 w-full">
+            <Text className="text-white text-base font-bold mb-1">Report Transaction</Text>
+            <Text className="text-gray-400 text-xs mb-4">
+              Amount: -₱{selectedTransaction ? Math.abs(Number(selectedTransaction.amount)).toFixed(2) : '0.00'}
+            </Text>
+            <Text className="text-gray-300 text-xs mb-2">Reason (optional)</Text>
+<TextInput
+              value={reportReason}
+              onChangeText={setReportReason}
+              placeholder="Describe the issue..."
+              placeholderTextColor="#6b7280"
+              multiline
+              numberOfLines={3}
+              className="bg-gray-700 border border-gray-600 rounded-xl px-3 py-2 mb-4 text-white text-xs"
+              style={{ minHeight: 60, textAlignVertical: 'top' }}
+            />
+            <View className="flex-row gap-2">
+              <TouchableOpacity
+                onPress={submitReport}
+                disabled={!!reportingId}
+                className="flex-1 bg-blue-600 rounded-xl py-3 items-center"
+              >
+                <Text className="text-white text-sm font-semibold">
+                  {reportingId ? 'Submitting...' : 'Submit Report'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setShowReportModal(false)}
+                className="flex-1 bg-gray-700 border border-gray-600 rounded-xl py-3 items-center"
+              >
+                <Text className="text-gray-300 text-sm">Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
       {transactions.length === 0 ? (
         <View className="flex-1 justify-center items-center">
           <Text className="text-lg font-bold text-gray-400">

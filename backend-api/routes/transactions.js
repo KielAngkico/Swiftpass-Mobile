@@ -53,27 +53,30 @@ tapUps.forEach(row => {
   });
 });
 
-      // ✅ FIXED: Only get entries where deducted_amount > 0 (exclude grace period)
-const [entries] = await pool.query(
-        `SELECT id, deducted_amount AS amount, entry_time AS timestamp, staff_name
-         FROM AdminEntryLogs 
-         WHERE member_id = ? 
-           AND deducted_amount > 0`,
+// Session deductions from AdminMembersTransactions (new cron-based system)
+      const [entries] = await pool.query(
+        `SELECT 
+           t.id,
+           t.amount,
+           t.timestamp,
+           r.id AS refund_request_id,
+           r.status AS refund_status
+         FROM AdminMembersTransactions t
+         LEFT JOIN RefundRequests r ON r.member_transaction_id = t.id
+         WHERE t.member_id = ?
+           AND t.transaction_type = 'session_deduction'`,
         [member_id]
       );
 
       entries.forEach(row => {
-        // ✅ Check if it was a grace period entry (shouldn't happen with WHERE clause above)
-        if (row.staff_name === 'Entry Grace Period') {
-          return; // Skip grace period entries
-        }
-
-finalList.push({
+        finalList.push({
           transaction_id: row.id,
           label: 'Gym Entry',
-          amount: -Number(row.amount),
+          amount: Number(row.amount),
           timestamp: row.timestamp,
-          transaction_type: 'gym_entry', // ✅ added
+          transaction_type: 'gym_entry',
+          refund_status: row.refund_status || null,
+          refund_request_id: row.refund_request_id || null,
         });
       });
 
