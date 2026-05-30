@@ -27,6 +27,7 @@ const exerciseRoutes = require('./routes/Exercises');
 const exerciseLogsRoute = require('./routes/ExercisesLogs');
 
 const cardioLogRoutes = require("./routes/cardioLog");
+const refundRoutes = require('./routes/refunds');
 
 
 
@@ -71,7 +72,8 @@ app.use("/api", GymActivityRoute);
 app.use('/api', exerciseRoutes);
 app.use("/api", exerciseLogsRoute);
 
-app.use("/api", cardioLogRoutes);
+
+app.use('/api', refundRoutes);
 
 
 console.log('Starting server...');
