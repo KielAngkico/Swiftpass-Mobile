@@ -21,6 +21,7 @@ const [rows] = await pool.query(
          admin_id
        FROM AdminEntryLogs
        WHERE member_id = ?
+         AND (staff_name != 'Entry Grace Period' OR staff_name IS NULL)
        ORDER BY entry_time DESC`,
       [member_id]
     );
