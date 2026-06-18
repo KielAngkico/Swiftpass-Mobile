@@ -47,7 +47,7 @@ tapUps.forEach(row => {
     transaction_id: row.id,
     label,
     amount: displayAmount,
-    timestamp: row.timestamp ? row.timestamp.toString().replace('T', ' ').replace('Z', '') + '+08:00' : null,
+    timestamp: row.timestamp ? new Date(row.timestamp).toISOString() : null,
     subscription_type: row.subscription_type || null,
     transaction_type: row.transaction_type,
   });
@@ -73,7 +73,7 @@ tapUps.forEach(row => {
           transaction_id: row.id,
           label: 'Gym Entry',
           amount: Number(row.amount),
-          timestamp: row.timestamp,
+         timestamp: row.timestamp ? new Date(row.timestamp).toISOString() : null,
           transaction_type: 'gym_entry',
           refund_status: row.refund_status || null,
           refund_request_id: row.refund_request_id || null,
