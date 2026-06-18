@@ -177,11 +177,16 @@ useEffect(() => {
                       TRAINING
                     </Text>
                   )}
-                  <View className="flex-row justify-between items-center mb-2">
+<View className="flex-row justify-between items-center mb-2">
                     <View className="flex-row items-center space-x-2">
                       <MaterialCommunityIcons name="door" size={20} color="#D1D5DB" />
                       <Text className="text-white text-base font-semibold">{log.label}</Text>
                     </View>
+                    {log.is_grace_reentry === 1 && (
+                      <View className="bg-yellow-500 rounded-full px-2 py-0.5">
+                        <Text className="text-white text-[10px] font-bold">Grace Re-entry</Text>
+                      </View>
+                    )}
                   </View>
                   
                   {/* Entry and Exit Times */}

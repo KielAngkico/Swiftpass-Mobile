@@ -18,11 +18,13 @@ const [rows] = await pool.query(
          full_name,
          entry_time,
          exit_time,
-         admin_id
+         admin_id,
+         is_grace_reentry,
+         parent_session_id,
+         member_status
        FROM AdminEntryLogs
        WHERE member_id = ?
-         AND (staff_name != 'Entry Grace Period' OR staff_name IS NULL)
-       ORDER BY entry_time DESC`,
+       ORDER BY COALESCE(entry_time, exit_time) DESC`,
       [member_id]
     );
 
@@ -41,15 +43,21 @@ const [rows] = await pool.query(
         entry_time: entry.entry_time,
         gym_name: gymName,
       });
-
 return {
   id: entry.id,
   full_name: entry.full_name,
   label: `Visited ${gymName} Gym`,
-timestamp: new Date(entry.entry_time).toISOString(),
-exit_time: entry.exit_time ? new Date(entry.exit_time).toISOString() : null,
+  timestamp: entry.entry_time 
+    ? new Date(entry.entry_time).toISOString() 
+    : entry.exit_time 
+      ? new Date(entry.exit_time).toISOString() 
+      : null,
+  exit_time: entry.exit_time ? new Date(entry.exit_time).toISOString() : null,
   type: 'entry',
   admin_id: entry.admin_id,
+  is_grace_reentry: entry.is_grace_reentry || 0,
+  parent_session_id: entry.parent_session_id || null,
+  member_status: entry.member_status,
 };
     }));
 
