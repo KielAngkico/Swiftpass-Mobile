@@ -13,6 +13,9 @@
       "android": {
         "buildType": "apk"
       },
+      "ios": {
+        "simulator": true
+      },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://api.swiftpasstech.com/api",
         "EXPO_PUBLIC_MEDIA_URL": "https://swiftpasstech.com"
